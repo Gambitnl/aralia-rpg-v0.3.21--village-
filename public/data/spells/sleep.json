@@ -1,0 +1,16 @@
+
+{
+  "id": "sleep",
+  "name": "Sleep",
+  "level": 1,
+  "school": "Enchantment",
+  "castingTime": "1 Action",
+  "range": "90 feet",
+  "components": {
+    "verbal": true,
+    "somatic": true,
+    "material": true
+  },
+  "duration": "1 Minute",
+  "description": "This spell sends creatures into a magical slumber. Roll 5d8; the total is how many hit points of creatures this spell can affect. Creatures within 20 feet of a point you choose within range are affected in ascending order of their current hit points."
+}
