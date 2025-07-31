@@ -5,7 +5,7 @@
 import React, { useEffect, useRef } from 'react';
 import { GEMINI_TEXT_MODEL_FALLBACK_CHAIN } from '../config/geminiConfig';
 
-type DevMenuActionType = 'main_menu' | 'char_creator' | 'save' | 'load' | 'toggle_log_viewer' | 'battle_map_demo' | 'generate_encounter' | 'toggle_party_editor' | 'toggle_npc_test_plan';
+type DevMenuActionType = 'main_menu' | 'char_creator' | 'save' | 'load' | 'toggle_log_viewer' | 'battle_map_demo' | 'generate_encounter' | 'toggle_party_editor' | 'toggle_npc_test_plan' | 'generate_town';
 
 interface DevMenuProps {
   isOpen: boolean;
@@ -51,6 +51,7 @@ const DevMenu: React.FC<DevMenuProps> = ({ isOpen, onClose, onDevAction, hasNewR
     { label: 'Battle Map Demo', action: 'battle_map_demo', style: 'bg-teal-600 hover:bg-teal-500' },
     { label: 'Edit Encounter Party', action: 'toggle_party_editor', style: 'bg-indigo-600 hover:bg-indigo-500' },
     { label: 'Generate Encounter', action: 'generate_encounter', style: 'bg-rose-600 hover:bg-rose-500' },
+    { label: 'Generate Town Map', action: 'generate_town', style: 'bg-orange-600 hover:bg-orange-500' },
     { label: 'View Gemini Prompt Log', action: 'toggle_log_viewer', style: 'bg-purple-600 hover:bg-purple-500' },
     { label: 'NPC Interaction Test Plan', action: 'toggle_npc_test_plan', style: 'bg-cyan-600 hover:bg-cyan-500' },
   ];

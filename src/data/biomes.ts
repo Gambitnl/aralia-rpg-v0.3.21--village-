@@ -66,4 +66,38 @@ export const BIOMES: Record<string, Biome> = {
   // 'tundra': { id: 'tundra', name: 'Tundra', color: 'bg-sky-200', icon: '❄️', description: 'Cold, treeless plains.', passable: true },
   // 'jungle': { id: 'jungle', name: 'Jungle', color: 'bg-emerald-600', icon: '🌴', description: 'Dense, tropical rainforest.', passable: true },
   // 'volcanic': { id: 'volcanic', name: 'Volcanic Wastes', color: 'bg-red-800', icon: '🌋', description: 'Ash-covered plains and lava flows.', passable: true },
+  'building': {
+    id: 'building',
+    name: 'Building',
+    color: 'bg-gray-400',
+    icon: '🏠',
+    description: 'A building in the city.',
+    passable: false,
+    impassableReason: "You cannot walk through buildings."
+  },
+  'wall': {
+    id: 'wall',
+    name: 'Wall',
+    color: 'bg-gray-500',
+    icon: '🧱',
+    description: 'A city wall.',
+    passable: false,
+    impassableReason: "You cannot walk through walls."
+  },
+  'road': {
+    id: 'road',
+    name: 'Road',
+    color: 'bg-gray-300',
+    icon: '•',
+    description: 'A road or street.',
+    passable: true
+  },
+  'field': {
+    id: 'field',
+    name: 'Field',
+    color: 'bg-green-200',
+    icon: '🌳',
+    description: 'An open field.',
+    passable: true
+  }
 };

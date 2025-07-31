@@ -36,6 +36,7 @@ import {
   USE_DUMMY_CHARACTER_FOR_DEV,
   BIOMES,
 } from './constants';
+import { generateTownMap } from './services/mapService';
 import { SUBMAP_DIMENSIONS } from './config/mapConfig';
 
 import WorldPane from './components/WorldPane';
@@ -357,8 +358,8 @@ const App: React.FC = () => {
     dispatch({ type: 'TOGGLE_PARTY_OVERLAY' });
   }, [dispatch]);
 
-  const handleDevMenuAction = useCallback((actionType: 'main_menu' | 'char_creator' | 'save' | 'load' | 'toggle_log_viewer' | 'battle_map_demo' | 'generate_encounter' | 'toggle_party_editor' | 'toggle_npc_test_plan') => {
-    const actionsThatNeedMenuToggle = ['save', 'battle_map_demo', 'generate_encounter'];
+  const handleDevMenuAction = useCallback((actionType: 'main_menu' | 'char_creator' | 'save' | 'load' | 'toggle_log_viewer' | 'battle_map_demo' | 'generate_encounter' | 'toggle_party_editor' | 'toggle_npc_test_plan' | 'generate_town') => {
+    const actionsThatNeedMenuToggle = ['save', 'battle_map_demo', 'generate_encounter', 'generate_town'];
     
     if (actionsThatNeedMenuToggle.includes(actionType)) {
         dispatch({ type: 'TOGGLE_DEV_MENU' });
@@ -392,8 +393,15 @@ const App: React.FC = () => {
         case 'toggle_npc_test_plan':
             processAction({ type: 'TOGGLE_NPC_TEST_MODAL', label: 'Toggle NPC Test Plan' });
             break;
+        case 'generate_town':
+            {
+                const newMapData = generateTownMap(50, 50, gameState.worldSeed);
+                dispatch({ type: 'SET_MAP_DATA', payload: newMapData });
+                dispatch({ type: 'TOGGLE_MAP_VISIBILITY' });
+            }
+            break;
     }
-  }, [dispatch, handleNewGame, processAction, handleLoadGameFlow, handleBattleMapDemo]);
+  }, [dispatch, handleNewGame, processAction, handleLoadGameFlow, handleBattleMapDemo, gameState.worldSeed]);
 
   const handleModelChange = useCallback((model: string | null) => {
     dispatch({ type: 'SET_DEV_MODEL_OVERRIDE', payload: model });
