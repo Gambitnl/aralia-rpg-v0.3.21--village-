@@ -99,7 +99,11 @@ const MapPane: React.FC<MapPaneProps> = ({ mapData, onTileClick, onClose }) => {
             'bg-yellow-300': 'rgba(253, 224, 71, 0.7)', 
             'bg-blue-700': 'rgba(29, 78, 216, 0.7)', 
             'bg-lime-600': 'rgba(101, 163, 13, 0.7)', 
-            'bg-teal-800': 'rgba(19, 78, 74, 0.7)', 
+            'bg-teal-800': 'rgba(19, 78, 74, 0.7)',
+            'bg-gray-400': 'rgba(156, 163, 175, 0.7)',
+            'bg-gray-500': 'rgba(107, 114, 128, 0.7)',
+            'bg-gray-300': 'rgba(209, 213, 219, 0.7)',
+            'bg-green-200': 'rgba(187, 247, 208, 0.7)',
         };
         backgroundColor = colorMap[biome.color] || 'rgba(107, 114, 128, 0.7)'; 
       } else {
