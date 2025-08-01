@@ -13,6 +13,11 @@ export class Patch {
         this.shape = vertices;
     }
 
+    public static fromRegion(region: Polygon): Patch {
+        const points = region.map(p => ({ x: p[0], y: p[1] }));
+        return new Patch(points);
+    }
+
     public borders(other: Patch): boolean {
         for (let i = 0; i < this.shape.length; i++) {
             const p1 = this.shape[i];
