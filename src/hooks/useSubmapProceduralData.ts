@@ -8,8 +8,8 @@ import { useMemo, useCallback } from 'react';
 import { LOCATIONS, STARTING_LOCATION_ID, BIOMES } from '../constants';
 import type { SeededFeatureConfig, PathDetails } from '../types';
 import * as SubmapUtils from '../utils/submapUtils';
-import { generateTown } from '../../services/townGeneratorService';
-import { rasterizeTownModel } from '../../services/townRasterizer';
+import { generateTown } from '../services/townGeneratorService';
+import { rasterizeTownModel } from '../services/townRasterizer';
 
 export type { SeededFeatureConfig, PathDetails };
 
