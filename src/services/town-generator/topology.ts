@@ -115,8 +115,8 @@ export class Topology {
 
     public buildPath(from: Point, to: Point, exclude: Node[] = []): Point[] | null {
         console.log(`buildPath called: From {x: ${from.x}, y: ${from.y}}, To {x: ${to.x}, y: ${to.y}}`);
-        const fromNode = this.pt2node.get(from);
-        const toNode = this.pt2node.get(to);
+        const fromNode = this.findNodeByPoint(from);
+        const toNode = this.findNodeByPoint(to);
         if (!fromNode || !toNode) {
             console.warn(`buildPath: fromNode or toNode is null. From: ${fromNode ? 'valid' : 'null'}, To: ${toNode ? 'valid' : 'null'}`);
             return null;
