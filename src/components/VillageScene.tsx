@@ -6,60 +6,61 @@ import React, { useEffect, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { Action } from '../types';
 
+import { MapData, Action, Biome } from '../types';
+import { BIOMES } from '../constants';
+
 interface VillageSceneProps {
   onAction: (action: Action) => void;
+  mapData: MapData;
 }
-
-// Hardcoded map data for the initial village.
-// In a full implementation, this would be loaded from a configuration file.
-// 0 = Grass, 1 = Path, 2 = Inn Door (Interactive)
-const villageMapLayout = [
-    [0, 0, 0, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 1, 2, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 1, 0, 0, 0],
-    [0, 1, 1, 1, 0, 1, 1, 1, 0],
-    [0, 1, 0, 0, 0, 0, 0, 1, 0],
-    [0, 1, 0, 0, 0, 0, 0, 1, 0],
-    [0, 1, 1, 1, 1, 1, 1, 1, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0, 0],
-];
 
 const TILE_SIZE = 32;
 
-const VillageScene: React.FC<VillageSceneProps> = ({ onAction }) => {
+const VillageScene: React.FC<VillageSceneProps> = ({ onAction, mapData }) => {
   const pixiContainerRef = useRef<HTMLDivElement>(null);
   const pixiAppRef = useRef<PIXI.Application | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
-    const initPixi = () => {
+    const setupPixi = async () => {
       if (pixiContainerRef.current && !pixiAppRef.current) {
-        // Initialize PixiJS Application using synchronous v7 constructor for better compatibility
-        const app = new PIXI.Application({
-          width: villageMapLayout[0].length * TILE_SIZE,
-          height: villageMapLayout.length * TILE_SIZE,
+        const app = new PIXI.Application();
+
+        await app.init({
+          width: mapData.gridSize.cols * TILE_SIZE,
+          height: mapData.gridSize.rows * TILE_SIZE,
           backgroundColor: 0x1099bb,
         });
 
-        // If the component unmounted while Pixi was initializing, destroy the app.
         if (!isMounted) {
           app.destroy(true, true);
           return;
         }
         
         pixiAppRef.current = app;
-        // Use app.view for PixiJS v7 compatibility instead of app.canvas (v8)
-        pixiContainerRef.current.appendChild(app.view as HTMLCanvasElement);
+        pixiContainerRef.current.appendChild(app.canvas as HTMLCanvasElement);
 
         // --- Rendering Logic ---
         const graphics = new PIXI.Graphics();
         
-        villageMapLayout.forEach((row, y) => {
-          row.forEach((tileType, x) => {
-            let color = 0x228B22; // Green for Grass
-            if (tileType === 1) color = 0xD2B48C; // Tan for Path
-            if (tileType === 2) color = 0x8B4513; // Brown for Inn Door
+        mapData.tiles.forEach((row, y) => {
+          row.forEach((tile, x) => {
+            const biome: Biome = BIOMES[tile.biomeId];
+            let color = 0x228B22; // Default Green for Grass
+
+            if (biome) {
+                // Convert Tailwind color string to PixiJS hex color
+                // This is a simplified conversion and might need a more robust solution
+                // if you have complex Tailwind colors (e.g., with opacity)
+                switch (biome.color) {
+                    case 'bg-green-700': color = 0x228B22; break; // Example: Green
+                    case 'bg-gray-500': color = 0x808080; break; // Example: Gray
+                    case 'bg-yellow-700': color = 0xFFA500; break; // Example: Orange/Brown for path
+                    case 'bg-red-700': color = 0x8B0000; break; // Example: Dark Red for special features
+                    default: color = 0x228B22; // Fallback
+                }
+            }
             
             graphics.fill(color);
             graphics.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -77,34 +78,43 @@ const VillageScene: React.FC<VillageSceneProps> = ({ onAction }) => {
           const tileX = Math.floor(pos.x / TILE_SIZE);
           const tileY = Math.floor(pos.y / TILE_SIZE);
           
-          const tileType = villageMapLayout[tileY]?.[tileX];
+          const clickedTile = mapData.tiles[tileY]?.[tileX];
           
-          if (tileType === 2) { // Inn Door
-             onAction({ type: 'move', label: 'Enter Inn', targetId: 'aralia_town_center' }); // Placeholder target
+          if (clickedTile) {
+             // Example: If you want to make certain biomes interactive
+             const biome = BIOMES[clickedTile.biomeId];
+             if (biome && biome.name === 'Inn') { // Assuming you have an 'Inn' biome
+                onAction({ type: 'move', label: 'Enter Inn', targetId: 'aralia_town_center' }); // Placeholder target
+             } else {
+                onAction({ type: 'inspect_submap_tile', label: `Inspect ${biome?.name || 'tile'}`, payload: { tileX, tileY, effectiveTerrainType: biome?.name || 'unknown', worldBiomeId: biome?.id || 'unknown', parentWorldMapCoords: { x: clickedTile.x, y: clickedTile.y } } });
+             }
           }
         });
       }
     };
 
-    initPixi();
+    (async () => {
+      await setupPixi();
+    })();
 
     // Cleanup function
     return () => {
       isMounted = false;
       if (pixiAppRef.current) {
-        pixiAppRef.current.destroy(true, true); // true to remove view from DOM, true to destroy textures
+        pixiAppRef.current.destroy(true, true);
         pixiAppRef.current = null;
       }
     };
-  }, [onAction]);
+  }, [onAction, mapData]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-900">
-      <h2 className="text-3xl font-cinzel text-amber-400 mb-4">Aralia Town</h2>
+      <h2 className="text-3xl font-cinzel text-amber-400 mb-4">Generated Town</h2>
       <div ref={pixiContainerRef} className="border-4 border-amber-600 rounded-lg" />
-       <p className="text-sm text-gray-400 mt-4 italic">Click on the brown door to enter the inn.</p>
+      <p className="text-sm text-gray-400 mt-4 italic">Click on tiles to interact.</p>
     </div>
   );
 };
+
 
 export default VillageScene;

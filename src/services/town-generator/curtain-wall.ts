@@ -53,8 +53,12 @@ export class CurtainWall {
         }
 
         if (entrances.length === 0) {
-            console.error("Bad walled area shape! No valid vertices for gates.", { shape: this.shape, excludedVertices: reserved, patches: this.patches });
-            throw new Error("Bad walled area shape!");
+            // Fallback: if no ideal gate locations are found, use any unreserved vertex
+            entrances = this.shape.filter(v => !reserved.includes(v));
+            if (entrances.length === 0) {
+                console.error("Bad walled area shape! No valid vertices for gates.", { shape: this.shape, excludedVertices: reserved, patches: this.patches });
+                throw new Error("Bad walled area shape!");
+            }
         }
 
         do {
@@ -109,9 +113,7 @@ export class CurtainWall {
             throw new Error("Bad walled area shape!");
         }
 
-        if (real) {
-            this.gates = this.gates.map(gate => this.smoothVertex(gate));
-        }
+        
     }
 
     private buildTowers() {

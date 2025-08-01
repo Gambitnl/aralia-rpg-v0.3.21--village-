@@ -126,13 +126,11 @@ const RaceSelection: React.FC<RaceSelectionProps> = ({ races, onRaceSelect }) =>
 
   return (
     <motion.div
-      {...{
-        key: "raceSelection",
-        initial: { x: 300, opacity: 0 },
-        animate: { x: 0, opacity: 1 },
-        exit: { x: -300, opacity: 0 },
-        transition: { duration: 0.3, ease: 'easeInOut' },
-      } as any}
+      key="raceSelection"
+      initial={{ x: 300, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: -300, opacity: 0 }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
       <h2 className="text-2xl text-sky-300 mb-6 text-center">Choose Your Race</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">

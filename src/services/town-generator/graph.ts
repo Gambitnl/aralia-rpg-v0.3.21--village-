@@ -21,6 +21,11 @@ class Node {
 export class Graph {
     private nodes: Node[] = [];
     private nextId = 0;
+    public node2pt: Map<Node, Point>;
+
+    constructor(node2pt: Map<Node, Point>) {
+        this.node2pt = node2pt;
+    }
 
     public add(): Node {
         const node = new Node(this.nextId++);
@@ -91,6 +96,4 @@ export class Graph {
 
         return null;
     }
-
-    public node2pt: Map<Node, Point> = new Map();
 }

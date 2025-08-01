@@ -397,7 +397,7 @@ const App: React.FC = () => {
             {
                 const newMapData = generateTownMap(50, 50, gameState.worldSeed);
                 dispatch({ type: 'SET_MAP_DATA', payload: newMapData });
-                dispatch({ type: 'TOGGLE_MAP_VISIBILITY' });
+                dispatch({ type: 'SET_GAME_PHASE', payload: GamePhase.VILLAGE_VIEW });
             }
             break;
     }
@@ -493,7 +493,7 @@ const App: React.FC = () => {
   } else if (gameState.phase === GamePhase.VILLAGE_VIEW) {
     mainContent = (
       <ErrorBoundary fallbackMessage="An error occurred in the Village Scene.">
-        <VillageScene onAction={processAction} />
+        <VillageScene onAction={processAction} mapData={gameState.mapData!} />
       </ErrorBoundary>
     );
   } else if (gameState.phase === GamePhase.PLAYING && gameState.party.length > 0 && gameState.subMapCoordinates) {

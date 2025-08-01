@@ -51,13 +51,11 @@ const PaladinFeatureSelection: React.FC<PaladinFeatureSelectionProps> = ({
 
   return (
     <motion.div
-      {...{
-        key: "paladinFeatures",
-        initial: { x: 300, opacity: 0 },
-        animate: { x: 0, opacity: 1 },
-        exit: { x: -300, opacity: 0 },
-        transition: { duration: 0.3, ease: 'easeInOut' },
-      } as any}
+      key="paladinFeatures"
+      initial={{ x: 300, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: -300, opacity: 0 }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
       <h2 className="text-2xl text-sky-300 mb-4 text-center">Paladin Spell Selection</h2>
       

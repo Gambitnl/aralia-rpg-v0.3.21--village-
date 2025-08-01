@@ -168,12 +168,10 @@ const WeaponMasterySelection: React.FC<WeaponMasterySelectionProps> = ({
 
   return (
     <motion.div
-      {...{
-        key: "weaponMasterySelection",
-        initial: { opacity: 0, y: 20 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: -20 },
-      } as any}
+      key="weaponMasterySelection"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
     >
       <h2 className="text-2xl text-sky-300 mb-2 text-center">Select Weapon Masteries</h2>
       <p className="text-sm text-gray-400 mb-4 text-center">As a {charClass.name}, you can master {selectionLimit} types of weapons.</p>

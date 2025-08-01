@@ -1,4 +1,4 @@
-import { Point, Polygon, MultiPolygon, cut, shrink, polygonCentroid, forEdge } from './geom';
+import { Point, Polygon, MultiPolygon, cut, shrink, polygonCentroid, forEdge, polygonArea } from './geom';
 import { interpolate } from '../town-generator/utils';
 import { next } from './geom';
 

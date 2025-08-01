@@ -1,4 +1,4 @@
-import { Point, Polygon, MultiPolygon, shrink, cut, forEdge, polygonArea, next } from './geom';
+import { Point, Polygon, MultiPolygon, shrink, cut, forEdge, polygonArea, next, polygonCentroid } from './geom';
 import { Patch } from './patch';
 import { Model } from './model';
 import { bisect, ring } from './cutter';
@@ -75,13 +75,17 @@ export class Ward {
             }
         });
 
+        if (!v) {
+            return []; // Return empty if no valid vertex found
+        }
+
         const spread = 0.8 * gridChaos;
         const ratio = (1 - spread) / 2 + random.next() * spread;
 
         const angleSpread = Math.PI / 6 * gridChaos * (polygonArea(p) < minSq * 4 ? 0.0 : 1);
         const b = (random.next() - 0.5) * angleSpread;
 
-        const halves = bisect(p, v!, ratio, b, split ? Ward.ALLEY : 0.0);
+        const halves = bisect(p, v, ratio, b, split ? Ward.ALLEY : 0.0);
 
         let buildings: MultiPolygon = [];
         for (const half of halves) {
@@ -118,6 +122,10 @@ export class Ward {
                     v = p0;
                 }
             });
+
+            if (!v) {
+                return []; // Return empty if no valid vertex found
+            }
 
             const v0 = v!;
             const v1 = next(p, v0);
@@ -172,7 +180,7 @@ export class Castle extends Ward {
 
     constructor(model: Model, patch: Patch) {
         super(model, patch);
-        this.wall = new CurtainWall(); // This needs to be properly implemented
+        this.wall = new CurtainWall(true, model, [patch], []);
     }
 
     public override createGeometry() {
