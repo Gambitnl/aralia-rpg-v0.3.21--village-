@@ -89,7 +89,7 @@ export function useSubmapProceduralData({
       }
     });
     return features;
-  }, [currentWorldBiomeId, townModel, seededFeaturesConfig, submapDimensions, simpleHash]);
+  }, [currentWorldBiomeId, townData, seededFeaturesConfig, submapDimensions, simpleHash]);
 
   const pathDetails = useMemo(() => {
     if (currentWorldBiomeId === 'town') {
