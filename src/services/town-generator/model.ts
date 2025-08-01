@@ -1,6 +1,6 @@
-import { Point, Polygon, Voronoi as MyVoronoi, distance } from './geom';
+import { Point, Polygon, Voronoi as MyVoronoi, distance, relax, smoothVertexEq } from './geom';
 import { Patch } from './patch';
-import { Ward, CommonWard, Castle, Cathedral, Market } from './wards';
+import { Ward, CommonWard, Castle, Cathedral, Market, CraftsmenWard, MerchantWard, AdministrationWard, Slum, PatriciateWard, MilitaryWard, Park } from './wards';
 import { CurtainWall } from './curtain-wall';
 import { Topology } from './topology';
 import { SeededRandom } from '../../utils/seededRandom';
