@@ -71,3 +71,100 @@ export function smoothVertexEq(poly: Polygon, steps = 1): Polygon {
     }
     return smoothed;
 }
+
+export function next(polygon: Polygon, vertex: Point): Point {
+    const index = polygon.indexOf(vertex);
+    if (index === -1) {
+        return polygon[0];
+    }
+    return polygon[(index + 1) % polygon.length];
+}
+
+export function forEdge(polygon: Polygon, callback: (p1: Point, p2: Point) => void): void {
+    for (let i = 0; i < polygon.length; i++) {
+        callback(polygon[i], polygon[(i + 1) % polygon.length]);
+    }
+}
+
+export function cut(polygon: Polygon, p1: Point, p2: Point): Polygon[] {
+    // This is a simplified version of the Sutherland-Hodgman algorithm.
+    // It only works for convex polygons.
+    const result: Polygon[] = [];
+    let currentPolygon: Polygon = [];
+    let firstPoint: Point | null = null;
+    let lastPoint: Point | null = null;
+
+    for (let i = 0; i < polygon.length; i++) {
+        const p = polygon[i];
+        const nextP = polygon[(i + 1) % polygon.length];
+
+        const isInsideP = (p2.x - p1.x) * (p.y - p1.y) - (p2.y - p1.y) * (p.x - p1.x) > 0;
+        const isInsideNextP = (p2.x - p1.x) * (nextP.y - p1.y) - (p2.y - p1.y) * (nextP.x - p1.x) > 0;
+
+        if (isInsideP) {
+            if (!firstPoint) {
+                firstPoint = p;
+            }
+            currentPolygon.push(p);
+            lastPoint = p;
+        }
+
+        if (isInsideP !== isInsideNextP) {
+            const intersection = intersect(p, nextP, p1, p2);
+            if (intersection) {
+                currentPolygon.push(intersection);
+                if (lastPoint) {
+                    result.push(currentPolygon);
+                }
+                currentPolygon = [intersection];
+                firstPoint = intersection;
+                lastPoint = intersection;
+            }
+        }
+    }
+
+    if (currentPolygon.length > 0) {
+        result.push(currentPolygon);
+    }
+
+    return result;
+}
+
+function intersect(p1: Point, p2: Point, p3: Point, p4: Point): Point | null {
+    const d = (p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y);
+    if (d === 0) {
+        return null;
+    }
+    const t = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / d;
+    const u = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / d;
+    if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+        return { x: p1.x + t * (p2.x - p1.x), y: p1.y + t * (p2.y - p1.y) };
+    }
+    return null;
+}
+
+export function shrink(polygon: Polygon, distances: number[]): Polygon {
+    const result: Polygon = [];
+    for (let i = 0; i < polygon.length; i++) {
+        const p1 = polygon[(i + polygon.length - 1) % polygon.length];
+        const p2 = polygon[i];
+        const p3 = polygon[(i + 1) % polygon.length];
+
+        const d1 = distance(p1, p2);
+        const d2 = distance(p2, p3);
+
+        const v1 = { x: (p1.x - p2.x) / d1, y: (p1.y - p2.y) / d1 };
+        const v2 = { x: (p3.x - p2.x) / d2, y: (p3.y - p2.y) / d2 };
+
+        const bisector = { x: v1.x + v2.x, y: v1.y + v2.y };
+        const bisectorLength = Math.sqrt(bisector.x * bisector.x + bisector.y * bisector.y);
+        bisector.x /= bisectorLength;
+        bisector.y /= bisectorLength;
+
+        const angle = Math.acos(v1.x * v2.x + v1.y * v2.y);
+        const shift = distances[i] / Math.sin(angle / 2);
+
+        result.push({ x: p2.x + bisector.x * shift, y: p2.y + bisector.y * shift });
+    }
+    return result;
+}

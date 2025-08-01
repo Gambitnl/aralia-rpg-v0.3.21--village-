@@ -237,8 +237,8 @@ export class MerchantWard extends Ward {
     public static override rateLocation(model: Model, patch: Patch): number {
         return -polygonArea(patch.shape);
     }
+}
 
-    
 export class Market extends Ward {
     public override createGeometry() {
         const statue = random.next() < 0.6;
@@ -389,20 +389,6 @@ export class Park extends Ward {
 
     public override getLabel() {
         return "Park";
-    }
-}
-
-
-    public override createGeometry() {
-        this.geometry = Ward.createAlleys(this.getCityBlock(), 100, 0.9, 0.9, 0.3, false);
-    }
-
-    public static override rateLocation(model: Model, patch: Patch): number {
-        return Math.random();
-    }
-
-    public override getLabel() {
-        return "Farm";
     }
 }
 
