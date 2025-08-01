@@ -99,14 +99,6 @@ export function rasterizeTownModel(model: Model, rows: number, cols: number): Ra
         fillPolygon(tileBiomeIds, plazaPoly, 'plaza');
     }
 
-    // 6. Convert rasterized data into features (placeholder)
-
-    const output: RasterizationOutput = {
-        activeSeededFeatures: [],
-        pathDetails: { mainPathCoords, pathAdjacencyCoords: new Set() }, // Adjacency not calculated yet
-        tileBiomeIds,
-    };
-
     // 6. Convert rasterized data into features
     const features = convertGridToFeatures(tileBiomeIds);
 
