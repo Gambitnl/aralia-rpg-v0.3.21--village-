@@ -49,6 +49,7 @@ export class CurtainWall {
         }
 
         if (entrances.length === 0) {
+            console.error("Bad walled area shape! No valid vertices for gates.", { shape: this.shape, excludedVertices: reserved, patches: this.patches });
             throw new Error("Bad walled area shape!");
         }
 

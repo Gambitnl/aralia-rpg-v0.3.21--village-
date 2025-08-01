@@ -181,7 +181,46 @@ export class Model {
     }
 
     public static findCircumference(patches: Patch[]): Polygon {
-        // TODO: implement this properly
-        return patches.length > 0 ? patches[0].shape : [];
+        if (patches.length === 0) {
+            return [];
+        } else if (patches.length === 1) {
+            return patches[0].shape;
+        }
+
+        const allEdges = new Map<string, {p1: Point, p2: Point, patch: Patch}>();
+        for (const patch of patches) {
+            for (let i = 0; i < patch.shape.length; i++) {
+                const p1 = patch.shape[i];
+                const p2 = patch.shape[(i + 1) % patch.shape.length];
+                const key = `${p1.x},${p1.y},${p2.x},${p2.y}`;
+                const reversedKey = `${p2.x},${p2.y},${p1.x},${p1.y}`;
+
+                if (allEdges.has(reversedKey)) {
+                    allEdges.delete(reversedKey);
+                } else {
+                    allEdges.set(key, {p1, p2, patch});
+                }
+            }
+        }
+
+        const edges = Array.from(allEdges.values());
+        if (edges.length === 0) return [];
+
+        const result: Polygon = [];
+        let currentEdge = edges[0];
+        result.push(currentEdge.p1);
+
+        for (let i = 0; i < edges.length; i++) {
+            const nextEdge = edges.find(e => e.p1 === currentEdge.p2);
+            if (nextEdge) {
+                result.push(nextEdge.p1);
+                currentEdge = nextEdge;
+            } else {
+                // Should not happen in a closed circumference
+                break;
+            }
+        }
+
+        return result;
     }
 }
