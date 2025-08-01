@@ -1,6 +1,6 @@
-import { Point, Polygon, Voronoi as MyVoronoi, distance } from './geom';
+import { Point, Polygon, Voronoi as MyVoronoi, distance, relax, smoothVertexEq } from './geom';
 import { Patch } from './patch';
-import { Ward, CommonWard, Castle, Cathedral, Market } from './wards';
+import { Ward, CommonWard, Castle, Cathedral, Market, CraftsmenWard, MerchantWard, AdministrationWard, Slum, PatriciateWard, MilitaryWard, Park } from './wards';
 import { CurtainWall } from './curtain-wall';
 import { Topology } from './topology';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -76,13 +76,13 @@ export class Model {
         }
 
         let delaunay = Delaunay.from(points.map(p => [p.x, p.y]));
+        let voronoi = delaunay.voronoi([-1000, -1000, 1000, 1000]);
 
         for (let i = 0; i < 3; i++) {
-            const relaxedPoints = relax(points, delaunay);
+            const relaxedPoints = relax(points, voronoi);
             delaunay = Delaunay.from(relaxedPoints.map(p => [p.x, p.y]));
+            voronoi = delaunay.voronoi([-1000, -1000, 1000, 1000]);
         }
-
-        let voronoi = delaunay.voronoi([-1000, -1000, 1000, 1000]);
 
         const regions = Array.from(voronoi.cellPolygons());
 
