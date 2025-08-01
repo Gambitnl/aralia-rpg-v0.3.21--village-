@@ -1,5 +1,6 @@
-import { Point, Polygon, MultiPolygon, cut, shrink, polygonCentroid, next, forEdge } from './geom';
+import { Point, Polygon, MultiPolygon, cut, shrink, polygonCentroid, forEdge } from './geom';
 import { interpolate } from '../town-generator/utils';
+import { next } from './geom';
 
 export function bisect(polygon: Polygon, vertex: Point, ratio = 0.5, angle = 0.0, gap = 0.0): MultiPolygon {
     const nextVertex = next(polygon, vertex);

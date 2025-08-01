@@ -168,6 +168,7 @@ export class Model {
                 a[i] = smoothed[i];
             }
         }
+    }
 
     private tidyUpRoads(): void {
         const segments: { start: Point; end: Point }[] = [];
