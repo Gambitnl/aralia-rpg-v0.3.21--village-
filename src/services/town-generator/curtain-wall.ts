@@ -39,6 +39,10 @@ export class CurtainWall {
     private buildGates(real: boolean, model: Model, reserved: Point[]): void {
         this.gates = [];
 
+        if (this.shape.length < 3) {
+            return;
+        }
+
         let entrances: Point[] = [];
         if (this.patches.length > 1) {
             entrances = this.shape.filter(v =>
