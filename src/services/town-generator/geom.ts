@@ -170,3 +170,92 @@ export function shrink(polygon: Polygon, distances: number[]): Polygon {
     }
     return result;
 }
+
+export function rect(width: number, height: number): Polygon {
+    const w2 = width / 2;
+    const h2 = height / 2;
+    return [
+        { x: -w2, y: -h2 },
+        { x: w2, y: -h2 },
+        { x: w2, y: h2 },
+        { x: -w2, y: h2 },
+    ];
+}
+
+export function rotate(polygon: Polygon, angle: number): Polygon {
+    const center = polygonCentroid(polygon);
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    return polygon.map(p => {
+        const px = p.x - center.x;
+        const py = p.y - center.y;
+        return {
+            x: px * cos - py * sin + center.x,
+            y: px * sin + py * cos + center.y,
+        };
+    });
+}
+
+export function offset(polygon: Polygon, point: Point): Polygon {
+    return polygon.map(p => ({ x: p.x + point.x, y: p.y + point.y }));
+}
+
+export function add(p1: Point, p2: Point): Point {
+    return { x: p1.x + p2.x, y: p1.y + p2.y };
+}
+
+export function subtract(p1: Point, p2: Point): Point {
+    return { x: p1.x - p2.x, y: p1.y - p2.y };
+}
+
+export function rotate90(p: Point): Point {
+    return { x: -p.y, y: p.x };
+}
+
+export function vector(polygon: Polygon, vertex: Point): Point {
+    const nextVertex = next(polygon, vertex);
+    return subtract(nextVertex, vertex);
+}
+
+export function findLongestEdge(polygon: Polygon): Point {
+    let longestEdgeStart: Point | null = null;
+    let maxLength = -1;
+
+    forEdge(polygon, (p1, p2) => {
+        const len = distance(p1, p2);
+        if (len > maxLength) {
+            maxLength = len;
+            longestEdgeStart = p1;
+        }
+    });
+
+    if (!longestEdgeStart) {
+        // This should not happen for a valid polygon with at least one edge.
+        // Return the first vertex as a fallback.
+        return polygon[0];
+    }
+
+    return longestEdgeStart;
+}
+
+export function inverseDistanceWeighting(polygon: Polygon, point: Point): number[] {
+    let sum = 0;
+    const distances = polygon.map(v => {
+        const d = 1 / distance(v, point);
+        sum += d;
+        return d;
+    });
+
+    return distances.map(d => d / sum);
+}
+
+export function findEdge(polygon: Polygon, p1: Point, p2: Point): number {
+    for (let i = 0; i < polygon.length; i++) {
+        if (polygon[i] === p1) {
+            if (polygon[(i + 1) % polygon.length] === p2) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}

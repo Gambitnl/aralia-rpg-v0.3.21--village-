@@ -8,6 +8,8 @@ import { useMemo, useCallback } from 'react';
 import { LOCATIONS, STARTING_LOCATION_ID, BIOMES } from '../constants';
 import type { SeededFeatureConfig, PathDetails } from '../types';
 import * as SubmapUtils from '../utils/submapUtils';
+import { generateTown } from '../../services/townGeneratorService';
+import { rasterizeTownModel } from '../../services/townRasterizer';
 
 export type { SeededFeatureConfig, PathDetails };
 
@@ -51,7 +53,20 @@ export function useSubmapProceduralData({
   // to generate the data for the *entire* map for rendering, which is not what the util is for.
   // The util is for single-tile lookups. So the original logic stays here, but the action handler
   // will use the new util.
+  const townData = useMemo(() => {
+    if (currentWorldBiomeId === 'town') {
+      const seed = simpleHash(0, 0, 'town_seed');
+      const model = generateTown(15, seed);
+      return rasterizeTownModel(model, submapDimensions.rows, submapDimensions.cols);
+    }
+    return null;
+  }, [currentWorldBiomeId, simpleHash, submapDimensions]);
+
   const activeSeededFeatures = useMemo(() => {
+    if (currentWorldBiomeId === 'town') {
+        return townData ? townData.activeSeededFeatures : [];
+    }
+
     const features: Array<{ x: number; y: number; config: SeededFeatureConfig; actualSize: number }> = [];
     if (!seededFeaturesConfig) return features;
 
@@ -74,9 +89,13 @@ export function useSubmapProceduralData({
       }
     });
     return features;
-  }, [seededFeaturesConfig, submapDimensions, simpleHash]);
+  }, [currentWorldBiomeId, townModel, seededFeaturesConfig, submapDimensions, simpleHash]);
 
   const pathDetails = useMemo(() => {
+    if (currentWorldBiomeId === 'town') {
+        return townData ? townData.pathDetails : { mainPathCoords: new Set<string>(), pathAdjacencyCoords: new Set<string>() };
+    }
+
     const mainPathCoords = new Set<string>();
     const pathAdjacencyCoords = new Set<string>();
     const { rows, cols } = submapDimensions;
