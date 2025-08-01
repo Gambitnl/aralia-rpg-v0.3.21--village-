@@ -291,6 +291,8 @@ function applySeededFeatureVisuals(
 
     if (seeded.config.shapeType === 'rectangular') {
       isWithinFeature = dx <= seeded.actualSize && dy <= seeded.actualSize;
+    } else if (seeded.config.shapeType === 'custom') {
+      isWithinFeature = seeded.config.customShape?.some(p => p.x === dx && p.y === dy) ?? false;
     } else { // Default to circular
       const distance = Math.sqrt(Math.pow(colIndex - seeded.x, 2) + Math.pow(rowIndex - seeded.y, 2));
       isWithinFeature = distance <= seeded.actualSize;

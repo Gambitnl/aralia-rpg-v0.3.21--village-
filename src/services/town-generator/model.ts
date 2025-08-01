@@ -1,6 +1,6 @@
-import { Point, Polygon, Voronoi as MyVoronoi, distance, relax, smoothVertexEq } from './geom';
+import { Point, Polygon, Voronoi as MyVoronoi, distance, relax, smoothVertexEq, next, findEdge } from './geom';
 import { Patch } from './patch';
-import { Ward, CommonWard, Castle, Cathedral, Market, CraftsmenWard, MerchantWard, AdministrationWard, Slum, PatriciateWard, MilitaryWard, Park } from './wards';
+import { Ward, CommonWard, Castle, Cathedral, Market, CraftsmenWard, MerchantWard, AdministrationWard, Slum, PatriciateWard, MilitaryWard, Park, Farm } from './wards';
 import { CurtainWall } from './curtain-wall';
 import { Topology } from './topology';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -295,8 +295,13 @@ export class Model {
         return p.withinCity && (p.withinWalls || this.getNeighbours(p).every(p => p.withinCity));
     }
 
-    public getNeighbour(p: Patch, p1: Point): Patch | null {
-        // TODO: implement this method
+    public getNeighbour(patch: Patch, v: Point): Patch | null {
+        const nextV = next(patch.shape, v);
+        for (const p of this.patches) {
+            if (p !== patch && findEdge(p.shape, nextV, v) !== -1) {
+                return p;
+            }
+        }
         return null;
     }
 

@@ -95,6 +95,16 @@ export const biomeVisualsConfig: Record<string, BiomeVisuals> = {
     ],
     scatterFeatures: [ { icon: '🌊', density: 0.2 }, { icon: '🐠', density: 0.05 }, { icon: '🐙', density: 0.02 }, {icon: '🚢', density: 0.01}, {icon:'🐬', density:0.02}, {icon:'⭐', density:0.01, color:'rgba(250,250,100,0.3)'}],
   },
+  'town': {
+    baseColors: ['rgba(128, 128, 128, 0.5)'],
+    pathColor: 'rgba(150, 150, 150, 0.6)',
+    pathIcon: '▫️',
+    pathAdjacency: {
+      scatter: [{ icon: '▫️', density: 0.1 }],
+    },
+    seededFeatures: [],
+    scatterFeatures: [],
+  },
 };
 
 export const defaultBiomeVisuals: BiomeVisuals = {

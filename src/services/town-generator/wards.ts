@@ -1,6 +1,7 @@
-import { Point, Polygon, MultiPolygon, shrink, cut, forEdge, polygonArea, next, polygonCentroid } from './geom';
+import { Point, Polygon, MultiPolygon, shrink, cut, forEdge, polygonArea, next, polygonCentroid, rect, rotate, offset, findLongestEdge, vector, add, rotate90, subtract, inverseDistanceWeighting } from './geom';
 import { Patch } from './patch';
 import { Model } from './model';
+import { scalar } from './utils';
 import { bisect, ring } from './cutter';
 import { SeededRandom } from '../../utils/seededRandom';
 import { distance2line, interpolate } from './utils';
@@ -52,8 +53,70 @@ export class Ward {
     }
 
     protected filterOutskirts() {
-        // This is a complex method that depends on a lot of other things.
-        // I will implement it later.
+        const populatedEdges: { x: number, y: number, dx: number, dy: number, d: number }[] = [];
+
+        const addEdge = (v1: Point, v2: Point, factor = 1.0) => {
+            const dx = v2.x - v1.x;
+            const dy = v2.y - v1.y;
+            const distances = new Map<Point, number>();
+
+            let maxD = 0;
+            for (const v of this.patch.shape) {
+                const d = (v !== v1 && v !== v2 ? distance2line(v1.x, v1.y, dx, dy, v.x, v.y) : 0) * factor;
+                distances.set(v, d);
+                if (d > maxD) {
+                    maxD = d;
+                }
+            }
+            populatedEdges.push({ x: v1.x, y: v1.y, dx: dx, dy: dy, d: maxD });
+        };
+
+        forEdge(this.patch.shape, (v1, v2) => {
+            let onRoad = false;
+            for (const street of this.model.arteries) {
+                if (street.includes(v1) && street.includes(v2)) {
+                    onRoad = true;
+                    break;
+                }
+            }
+
+            if (onRoad) {
+                addEdge(v1, v2, 1);
+            } else {
+                const n = this.model.getNeighbour(this.patch, v1);
+                if (n && n.withinCity) {
+                    addEdge(v1, v2, this.model.isEnclosed(n) ? 1 : 0.4);
+                }
+            }
+        });
+
+        const density = this.patch.shape.map(v => {
+            if (this.model.gates.includes(v)) return 1;
+            return this.model.patchByVertex(v).every(p => p.withinCity) ? 2 * random.next() : 0;
+        });
+
+        this.geometry = this.geometry.filter(building => {
+            let minDist = 1.0;
+            for (const edge of populatedEdges) {
+                for (const v of building) {
+                    const d = distance2line(edge.x, edge.y, edge.dx, edge.dy, v.x, v.y);
+                    const dist = d / edge.d;
+                    if (dist < minDist) {
+                        minDist = dist;
+                    }
+                }
+            }
+
+            const c = polygonCentroid(building);
+            const i = inverseDistanceWeighting(this.patch.shape, c);
+            let p = 0.0;
+            for (let j = 0; j < i.length; j++) {
+                p += density[j] * i[j];
+            }
+            minDist /= p;
+
+            return random.next() > minDist;
+        });
     }
 
     public getLabel(): string | null {
@@ -102,50 +165,42 @@ export class Ward {
     }
 
     public static createOrthoBuilding(poly: Polygon, minBlockSq: number, fill: number): MultiPolygon {
-        // This is a simplified version of the original algorithm.
-        // It recursively slices the polygon into smaller blocks.
-        function slice(p: Polygon): MultiPolygon {
-            if (polygonArea(p) < minBlockSq) {
-                if (random.next() < fill) {
-                    return [p];
-                } else {
-                    return [];
-                }
-            }
-
-            let v: Point | null = null;
-            let length = -1.0;
-            forEdge(p, (p0, p1) => {
-                const len = Math.sqrt(Math.pow(p0.x - p1.x, 2) + Math.pow(p0.y - p1.y, 2));
-                if (len > length) {
-                    length = len;
-                    v = p0;
-                }
-            });
-
-            if (!v) {
-                return []; // Return empty if no valid vertex found
-            }
-
-            const v0 = v!;
+        function slice(p: Polygon, c1: Point, c2: Point): MultiPolygon {
+            const v0 = findLongestEdge(p);
             const v1 = next(p, v0);
+            const v = subtract(v1, v0);
+
             const ratio = 0.4 + random.next() * 0.2;
             const p1 = interpolate(v0, v1, ratio);
 
-            const dx = v1.x - v0.x;
-            const dy = v1.y - v0.y;
+            const c = Math.abs(scalar(v.x, v.y, c1.x, c1.y)) < Math.abs(scalar(v.x, v.y, c2.x, c2.y)) ? c1 : c2;
 
-            const p2 = { x: p1.x - dy, y: p1.y + dx };
-
-            const halves = cut(p, p1, p2);
+            const halves = cut(p, p1, add(p1, c));
             let buildings: MultiPolygon = [];
             for (const half of halves) {
-                buildings = buildings.concat(slice(half));
+                if (polygonArea(half) < minBlockSq * Math.pow(2, random.nextNormal() * 2 - 1)) {
+                    if (random.next() < fill) {
+                        buildings.push(half);
+                    }
+                } else {
+                    buildings = buildings.concat(slice(half, c1, c2));
+                }
             }
             return buildings;
         }
 
-        return slice(poly);
+        if (polygonArea(poly) < minBlockSq) {
+            return [poly];
+        } else {
+            const c1 = vector(poly, findLongestEdge(poly));
+            const c2 = rotate90(c1);
+            while (true) {
+                const blocks = slice(poly, c1, c2);
+                if (blocks.length > 0) {
+                    return blocks;
+                }
+            }
+        }
     }
 }
 
@@ -400,3 +455,21 @@ export class Park extends Ward {
     }
 }
 
+function randomFrom<T>(arr: T[]): T {
+    return arr[Math.floor(random.next() * arr.length)];
+}
+
+export class Farm extends Ward {
+    public override createGeometry() {
+        let housing = rect(4, 4);
+        const pos = interpolate(randomFrom(this.patch.shape), polygonCentroid(this.patch.shape), 0.3 + random.next() * 0.4);
+        housing = rotate(housing, random.next() * Math.PI);
+        housing = offset(housing, pos);
+
+        this.geometry = Ward.createOrthoBuilding(housing, 8, 0.5);
+    }
+
+    public override getLabel() {
+        return "Farm";
+    }
+}
