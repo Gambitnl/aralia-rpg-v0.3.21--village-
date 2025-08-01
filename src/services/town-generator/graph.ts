@@ -1,112 +1,96 @@
-// A simple graph implementation with a Node class and a Graph class.
-// The Graph class has an aStar method for pathfinding.
+import { Point, distance } from './geom';
 
-export class Node {
+class Node {
+    public id: number;
     public links: Map<Node, number> = new Map();
+    public g = 0;
+    public h = 0;
+    public f = 0;
+    public parent: Node | null = null;
 
-    public link(node: Node, price = 1, symmetrical = true) {
-        this.links.set(node, price);
-        if (symmetrical) {
-            node.links.set(this, price);
-        }
+    constructor(id: number) {
+        this.id = id;
     }
 
-    public unlink(node: Node, symmetrical = true) {
-        this.links.delete(node);
-        if (symmetrical) {
-            node.links.delete(this);
-        }
-    }
-
-    public unlinkAll() {
-        for (const node of this.links.keys()) {
-            this.unlink(node);
-        }
+    public link(node: Node, weight: number): void {
+        this.links.set(node, weight);
+        node.links.set(this, weight);
     }
 }
 
 export class Graph {
-    public nodes: Node[] = [];
+    private nodes: Node[] = [];
+    private nextId = 0;
 
-    public add(node: Node | null = null): Node {
-        if (node === null) {
-            node = new Node();
-        }
+    public add(): Node {
+        const node = new Node(this.nextId++);
         this.nodes.push(node);
         return node;
     }
 
-    public remove(node: Node) {
-        node.unlinkAll();
-        const index = this.nodes.indexOf(node);
-        if (index > -1) {
-            this.nodes.splice(index, 1);
-        }
-    }
-
-    public aStar(start: Node, goal: Node, exclude: Node[] = []): Node[] | null {
-        const closedSet: Node[] = [...exclude];
+    public aStar(start: Node, end: Node, exclude: Node[] = []): Point[] | null {
         const openSet: Node[] = [start];
-        const cameFrom: Map<Node, Node> = new Map();
+        const closedSet: Node[] = [];
 
-        const gScore: Map<Node, number> = new Map();
-        gScore.set(start, 0);
+        for (const node of this.nodes) {
+            node.g = 0;
+            node.h = 0;
+            node.f = 0;
+            node.parent = null;
+        }
+
+        start.h = distance(this.node2pt.get(start)!, this.node2pt.get(end)!);
+        start.f = start.h;
 
         while (openSet.length > 0) {
-            openSet.sort((a, b) => (gScore.get(a) ?? Infinity) - (gScore.get(b) ?? Infinity));
-            const current = openSet.shift()!;
-
-            if (current === goal) {
-                return this.buildPath(cameFrom, current);
+            let lowestFIndex = 0;
+            for (let i = 0; i < openSet.length; i++) {
+                if (openSet[i].f < openSet[lowestFIndex].f) {
+                    lowestFIndex = i;
+                }
             }
 
+            let current = openSet[lowestFIndex];
+
+            if (current === end) {
+                const path: Point[] = [];
+                let temp: Node | null = current;
+                while (temp) {
+                    path.push(this.node2pt.get(temp)!);
+                    temp = temp.parent;
+                }
+                return path.reverse();
+            }
+
+            openSet.splice(lowestFIndex, 1);
             closedSet.push(current);
 
-            const currentScore = gScore.get(current) ?? Infinity;
-            for (const [neighbour, price] of current.links.entries()) {
-                if (closedSet.includes(neighbour)) {
+            for (const [neighbor, weight] of current.links.entries()) {
+                if (closedSet.includes(neighbor) || exclude.includes(neighbor)) {
                     continue;
                 }
 
-                const score = currentScore + price;
-                if (!openSet.includes(neighbour)) {
-                    openSet.push(neighbour);
-                } else if (score >= (gScore.get(neighbour) ?? Infinity)) {
-                    continue;
+                const gScore = current.g + weight;
+                let gScoreIsBest = false;
+
+                if (!openSet.includes(neighbor)) {
+                    gScoreIsBest = true;
+                    neighbor.h = distance(this.node2pt.get(neighbor)!, this.node2pt.get(end)!);
+                    openSet.push(neighbor);
+                } else if (gScore < neighbor.g) {
+                    gScoreIsBest = true;
                 }
 
-                cameFrom.set(neighbour, current);
-                gScore.set(neighbour, score);
+                if (gScoreIsBest) {
+                    neighbor.parent = current;
+                    neighbor.g = gScore;
+                    neighbor.f = neighbor.g + neighbor.h;
+                }
             }
         }
 
         return null;
     }
 
-    private buildPath(cameFrom: Map<Node, Node>, current: Node): Node[] {
-        const path: Node[] = [current];
-        while (cameFrom.has(current)) {
-            current = cameFrom.get(current)!;
-            path.unshift(current);
-        }
-        return path;
-    }
-
-    public calculatePrice(path: Node[]): number {
-        if (path.length < 2) {
-            return 0;
-        }
-
-        let price = 0;
-        for (let i = 0; i < path.length - 1; i++) {
-            const current = path[i];
-            const next = path[i + 1];
-            if (current.links.has(next)) {
-                price += current.links.get(next)!;
-            } else {
-                return NaN;
-            }
-        }
-        return price;
-    }
+    public node2pt: Map<Node, Point> = new Map();
 }

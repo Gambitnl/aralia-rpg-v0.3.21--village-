@@ -1,35 +1,51 @@
 import { Point } from './geom';
-import { Graph, Node } from './graph';
+import { Graph } from './graph';
 import { Model } from './model';
 import { Patch } from './patch';
-import { distance } from './geom';
+
+class Node {
+    public id: number;
+    public links: Map<Node, number> = new Map();
+    public g = 0;
+    public h = 0;
+    public f = 0;
+    public parent: Node | null = null;
+
+    constructor(id: number) {
+        this.id = id;
+    }
+
+    public link(node: Node, weight: number): void {
+        this.links.set(node, weight);
+        node.links.set(this, weight);
+    }
+}
 
 export class Topology {
     private model: Model;
     private graph: Graph;
-    public pt2node: Map<Point, Node>;
-    public node2pt: Map<Node, Point>;
+    public pt2node: Map<Point, Node> = new Map();
+    public node2pt: Map<Node, Point> = new Map();
     private blocked: Point[];
-    public inner: Node[];
-    public outer: Node[];
+    public inner: Node[] = [];
+    public outer: Node[] = [];
 
     constructor(model: Model) {
         this.model = model;
         this.graph = new Graph();
-        this.pt2node = new Map();
-        this.node2pt = new Map();
-        this.inner = [];
-        this.outer = [];
 
         this.blocked = [];
-        if (model.wall) {
-            this.blocked = this.blocked.concat(model.wall.shape);
+        if (this.model.citadel) {
+            this.blocked = this.blocked.concat(this.model.citadel.shape);
         }
-        this.blocked = this.blocked.filter(p => !model.gates.includes(p));
+        if (this.model.wall) {
+            this.blocked = this.blocked.concat(this.model.wall.shape);
+        }
+        this.blocked = this.blocked.filter(p => !this.model.gates.includes(p));
 
-        const border = model.border ? model.border.shape : [];
+        const border = this.model.border.shape;
 
-        for (const p of model.patches) {
+        for (const p of this.model.patches) {
             const withinCity = p.withinCity;
             let v1 = p.shape[p.shape.length - 1];
             let n1 = this.processPoint(v1);
@@ -56,33 +72,29 @@ export class Topology {
                 }
 
                 if (n0 && n1) {
-                    n0.link(n1, distance(v0, v1));
+                    n0.link(n1, Math.sqrt(Math.pow(v0.x - v1.x, 2) + Math.pow(v0.y - v1.y, 2)));
                 }
             }
         }
     }
 
     private processPoint(v: Point): Node | null {
-        let n: Node;
-        if (this.pt2node.has(v)) {
-            n = this.pt2node.get(v)!;
-        } else {
+        let n: Node | undefined = this.pt2node.get(v);
+        if (!n) {
             n = this.graph.add();
             this.pt2node.set(v, n);
             this.node2pt.set(n, v);
+            (this.graph as any).node2pt.set(n, v);
         }
+
         return this.blocked.includes(v) ? null : n;
     }
 
     public buildPath(from: Point, to: Point, exclude: Node[] = []): Point[] | null {
-        const startNode = this.pt2node.get(from);
-        const goalNode = this.pt2node.get(to);
+        const fromNode = this.pt2node.get(from);
+        const toNode = this.pt2node.get(to);
+        if (!fromNode || !toNode) return null;
 
-        if (!startNode || !goalNode) {
-            return null;
-        }
-
-        const path = this.graph.aStar(startNode, goalNode, exclude);
-        return path ? path.map(n => this.node2pt.get(n)!) : null;
+        return this.graph.aStar(fromNode, toNode, exclude);
     }
 }

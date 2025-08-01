@@ -209,6 +209,36 @@ export class Cathedral extends Ward {
     }
 }
 
+export class CraftsmenWard extends Ward {
+    public override createGeometry() {
+        this.geometry = Ward.createAlleys(this.getCityBlock(), 20, 0.7, 0.4, 0.02);
+        if (!this.model.isEnclosed(this.patch)) {
+            this.filterOutskirts();
+        }
+    }
+
+    public static override rateLocation(model: Model, patch: Patch): number {
+        return patch.shape.reduce((acc, p) => acc + p.y, 0) / patch.shape.length;
+    }
+
+    public override getLabel() {
+        return "Craftsmen Ward";
+    }
+}
+
+export class MerchantWard extends Ward {
+    public override createGeometry() {
+        this.geometry = Ward.createAlleys(this.getCityBlock(), 40, 0.3, 0.6);
+        if (!this.model.isEnclosed(this.patch)) {
+            this.filterOutskirts();
+        }
+    }
+
+    public static override rateLocation(model: Model, patch: Patch): number {
+        return -polygonArea(patch.shape);
+    }
+
+    
 export class Market extends Ward {
     public override createGeometry() {
         const statue = random.next() < 0.6;
@@ -275,3 +305,104 @@ export class Market extends Ward {
         return "Market";
     }
 }
+
+export class GateWard extends Ward {
+    public override createGeometry() {
+        this.geometry = Ward.createAlleys(this.getCityBlock(), 10, 0.2, 0.3);
+    }
+
+    public override getLabel() {
+        return "Gate Ward";
+    }
+}
+
+export class Slum extends Ward {
+    public override createGeometry() {
+        this.geometry = Ward.createAlleys(this.getCityBlock(), 1, 0.8, 0.8, 0.1);
+        if (!this.model.isEnclosed(this.patch)) {
+            this.filterOutskirts();
+        }
+    }
+
+    public static override rateLocation(model: Model, patch: Patch): number {
+        return -(patch.shape.reduce((acc, p) => acc + p.y, 0) / patch.shape.length);
+    }
+
+    public override getLabel() {
+        return "Slums";
+    }
+}
+
+export class AdministrationWard extends Ward {
+    public override createGeometry() {
+        this.geometry = Ward.createOrthoBuilding(this.getCityBlock(), 40, 0.6);
+    }
+
+    public static override rateLocation(model: Model, patch: Patch): number {
+        return model.wall ? -distance2line(polygonCentroid(patch.shape), model.wall.shape[0], model.wall.shape[model.wall.shape.length - 1]) : 0;
+    }
+
+    public override getLabel() {
+        return "Administration Ward";
+    }
+}
+
+export class MilitaryWard extends Ward {
+    public override createGeometry() {
+        this.geometry = Ward.createOrthoBuilding(this.getCityBlock(), 30, 0.7);
+    }
+
+    public static override rateLocation(model: Model, patch: Patch): number {
+        if (model.citadel) {
+            return -patch.shape.reduce((d, p) => Math.min(d, distance2line(p, model.citadel.shape[0], model.citadel.shape[1])), Infinity);
+        }
+        return 0;
+    }
+
+    public override getLabel() {
+        return "Military Ward";
+    }
+}
+
+export class PatriciateWard extends Ward {
+    public override createGeometry() {
+        this.geometry = Ward.createAlleys(this.getCityBlock(), 60, 0.1, 0.4, 0.2);
+    }
+
+    public static override rateLocation(model: Model, patch: Patch): number {
+        return -patch.shape.reduce((d, p) => Math.min(d, p.y), Infinity);
+    }
+
+    public override getLabel() {
+        return "Patriciate Ward";
+    }
+}
+
+export class Park extends Ward {
+    public override createGeometry() {
+        this.geometry = Ward.createAlleys(this.getCityBlock(), 100, 0.9, 0.9, 0.9, false);
+    }
+
+    public static override rateLocation(model: Model, patch: Patch): number {
+        return compactness(patch.shape) < 0.7 ? Infinity : 0;
+    }
+
+    public override getLabel() {
+        return "Park";
+    }
+}
+
+
+    public override createGeometry() {
+        this.geometry = Ward.createAlleys(this.getCityBlock(), 100, 0.9, 0.9, 0.3, false);
+    }
+
+    public static override rateLocation(model: Model, patch: Patch): number {
+        return Math.random();
+    }
+
+    public override getLabel() {
+        return "Farm";
+    }
+}
+
