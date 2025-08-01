@@ -76,13 +76,13 @@ export class Model {
         }
 
         let delaunay = Delaunay.from(points.map(p => [p.x, p.y]));
+        let voronoi = delaunay.voronoi([-1000, -1000, 1000, 1000]);
 
         for (let i = 0; i < 3; i++) {
-            const relaxedPoints = relax(points, delaunay);
+            const relaxedPoints = relax(points, voronoi);
             delaunay = Delaunay.from(relaxedPoints.map(p => [p.x, p.y]));
+            voronoi = delaunay.voronoi([-1000, -1000, 1000, 1000]);
         }
-
-        let voronoi = delaunay.voronoi([-1000, -1000, 1000, 1000]);
 
         const regions = Array.from(voronoi.cellPolygons());
 

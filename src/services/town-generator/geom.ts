@@ -40,10 +40,12 @@ export function compactness(polygon: Polygon): number {
     return 4 * Math.PI * area / (perimeter * perimeter);
 }
 
-export function relax(points: Point[], delaunay: Delaunay<any>): Point[] {
+import { Voronoi } from 'd3-delaunay';
+
+export function relax(points: Point[], voronoi: Voronoi<any>): Point[] {
     const newPoints: Point[] = [];
     for (let i = 0; i < points.length; i++) {
-        const cell = delaunay.voronoi.cellPolygon(i);
+        const cell = voronoi.cellPolygon(i);
         if (cell) {
             let x = 0;
             let y = 0;
