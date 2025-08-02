@@ -4,8 +4,6 @@
  */
 import React, { useEffect, useRef } from 'react';
 import * as PIXI from 'pixi.js';
-import { Action } from '../types';
-
 import { MapData, Action, Biome } from '../types';
 import { BIOMES } from '../constants';
 

@@ -7,7 +7,7 @@
 import { useMemo, useCallback } from 'react';
 import { LOCATIONS, STARTING_LOCATION_ID, BIOMES } from '../constants';
 import type { SeededFeatureConfig, PathDetails } from '../types';
-import * as SubmapUtils from '../utils/submapUtils';
+import { simpleHash as baseSimpleHash } from '../utils/submapUtils';
 import { generateTown } from '../services/townGeneratorService';
 import { rasterizeTownModel } from '../services/townRasterizer';
 
@@ -37,17 +37,19 @@ export function useSubmapProceduralData({
   const worldBiome = BIOMES[currentWorldBiomeId];
   const biomeSeedText = worldBiome ? worldBiome.id + worldBiome.name : 'default_seed';
 
-  const simpleHash = useCallback((submapX: number, submapY: number, seedSuffix: string): number => {
-    // This is a local reimplementation because the util itself is not exported,
-    // but the hook can still use the same logic. For a full refactor, this would
-    // be exported from the util.
-    let h = 0;
-    const str = `${worldSeed},${parentWorldMapCoords.x},${parentWorldMapCoords.y},${submapX},${submapY},${biomeSeedText},${seedSuffix}`;
-    for (let i = 0; i < str.length; i++) {
-      h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-    }
-    return Math.abs(h);
-  }, [worldSeed, biomeSeedText, parentWorldMapCoords]);
+  const simpleHash = useCallback(
+    (submapX: number, submapY: number, seedSuffix: string): number =>
+      baseSimpleHash(
+        worldSeed,
+        parentWorldMapCoords.x,
+        parentWorldMapCoords.y,
+        biomeSeedText,
+        submapX,
+        submapY,
+        seedSuffix
+      ),
+    [worldSeed, parentWorldMapCoords, biomeSeedText]
+  );
 
   // The complex logic is now inside getSubmapTileInfo, but the hook still needs
   // to generate the data for the *entire* map for rendering, which is not what the util is for.

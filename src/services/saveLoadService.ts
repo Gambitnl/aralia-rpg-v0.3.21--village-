@@ -31,7 +31,12 @@ export async function saveGame(gameState: GameState, slotName: string = DEFAULT_
       isGeminiLogViewerVisible: false,
       characterSheetModal: { isOpen: false, character: null },
     };
-    const serializedState = JSON.stringify(stateToSave);
+    const serializedState = JSON.stringify(stateToSave, (_key, value) => {
+      if (value instanceof Set) {
+        return Array.from(value);
+      }
+      return value;
+    });
     localStorage.setItem(slotName, serializedState);
     console.log(`Game saved to slot: ${slotName} at ${new Date(stateToSave.saveTimestamp!).toLocaleString()}`);
     return true;
@@ -60,6 +65,14 @@ export async function loadGame(slotName: string = DEFAULT_SAVE_SLOT): Promise<Ga
       return null;
     }
     const loadedState: GameState = JSON.parse(serializedState);
+
+    if (loadedState.mapData?.pathDetails) {
+      const { mainPathCoords, pathAdjacencyCoords } = loadedState.mapData.pathDetails as any;
+      loadedState.mapData.pathDetails = {
+        mainPathCoords: new Set(mainPathCoords || []),
+        pathAdjacencyCoords: new Set(pathAdjacencyCoords || []),
+      };
+    }
 
     if (loadedState.saveVersion !== SAVE_GAME_VERSION) {
       console.warn(`Save game version mismatch. Expected ${SAVE_GAME_VERSION}, found ${loadedState.saveVersion}. Load aborted.`);
