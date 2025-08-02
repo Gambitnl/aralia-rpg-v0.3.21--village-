@@ -385,6 +385,8 @@ export interface MapTile {
 export interface MapData {
   gridSize: { rows: number; cols: number };
   tiles: MapTile[][]; // tiles[row][col]
+  activeSeededFeatures?: Array<{ x: number; y: number; config: SeededFeatureConfig; actualSize: number }>;
+  pathDetails?: PathDetails;
 }
 
 export interface GeminiLogEntry {
@@ -653,6 +655,11 @@ export interface SeededFeatureConfig {
     color?: string;
   };
   zOffset?: number; // For layering, higher zOffset means it draws on top
+}
+
+export interface PathDetails {
+  mainPathCoords: Set<string>;
+  pathAdjacencyCoords: Set<string>;
 }
 
 export interface GlossaryTooltipProps {
