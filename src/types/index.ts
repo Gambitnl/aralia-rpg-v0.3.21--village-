@@ -385,7 +385,7 @@ export interface MapTile {
 export interface MapData {
   gridSize: { rows: number; cols: number };
   tiles: MapTile[][]; // tiles[row][col]
-  activeSeededFeatures?: Array<{ x: number; y: number; config: SeededFeatureConfig; actualSize: number }>;
+  activeSeededFeatures?: ActiveSeededFeature[];
   pathDetails?: PathDetails;
 }
 
