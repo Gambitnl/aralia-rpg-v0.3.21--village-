@@ -19,15 +19,14 @@ To know what's possible, it helps to understand the application's technical land
 
 *   **Framework**: **React** (v19) using modern features like hooks.
 *   **Language**: **TypeScript** for type safety.
-*   **Styling**: **Tailwind CSS** for utility-first styling. All custom styles are in `<style>` blocks in `index.html`.
-*   **Modules**: The app uses native **ES6 Modules**. The `index.html` file contains an `<script type="importmap">` which defines how modules like `react`, `@google/genai`, etc., are loaded directly from `esm.sh`. **There is no local `node_modules` folder or complex build tool like Webpack or Vite.**
+*   **Styling**: **Tailwind CSS** for utility-first styling, compiled with PostCSS via the `index.css` entry file.
+*   **Modules**: The app uses native **ES6 Modules** with Vite for development and build. The `index.html` file contains a `<script type="importmap">` which defines how modules like `react`, `@google/genai`, etc., can be loaded directly from `esm.sh`.
 *   **AI Integration**: The app uses the **`@google/genai`** SDK for all interactions with the Gemini models. This is a core, unchangeable requirement.
 
 ### Architectural Constraints (What I Can't Do)
 
 Because this is a client-side, static application without a traditional build pipeline, there are some hard limitations:
 *   **No Backend**: I cannot add a server, a database (like MySQL, MongoDB), or server-side languages (like Node.js, Python, PHP). All state must be managed on the client or saved to Local Storage.
-*   **No Build Tools**: I cannot introduce complex build systems (Webpack, Vite, Babel) or modify a `package.json` file. All dependencies must be available via the existing import-map structure from a CDN like `esm.sh`.
 *   **No New Top-Level Files**: I cannot add new files to the absolute root directory. New files should be placed in appropriate subdirectories (e.g., `src/components/`, `src/hooks/`).
 
 ### Architectural Possibilities (Thinking Outside the Box)
