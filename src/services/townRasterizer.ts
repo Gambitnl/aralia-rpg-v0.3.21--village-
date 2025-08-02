@@ -1,12 +1,11 @@
 import { Model } from './town-generator/model';
-import { Patch } from './town-generator/patch';
 import { Point, Polygon } from './town-generator/geom';
-import { PathDetails, SeededFeatureConfig } from '../types';
+import { PathDetails, SeededFeatureConfig, MapData, MapTile } from '../types';
 
-interface RasterizationOutput {
+interface RasterizationResult {
+  mapData: MapData;
   activeSeededFeatures: Array<{ x: number; y: number; config: SeededFeatureConfig; actualSize: number }>;
   pathDetails: PathDetails;
-  tileBiomeIds: string[][];
 }
 
 // Helper function to draw a line on the grid
@@ -29,7 +28,7 @@ function drawLine(grid: string[][], x1: number, y1: number, x2: number, y2: numb
     }
 }
 
-export function rasterizeTownModel(model: Model, rows: number, cols: number): RasterizationOutput {
+export function rasterizeTown(model: Model, rows: number, cols: number): RasterizationResult {
     console.log("Starting town rasterization...");
 
     const tileBiomeIds: string[][] = Array(rows).fill(null).map(() => Array(cols).fill('grass'));
@@ -102,10 +101,26 @@ export function rasterizeTownModel(model: Model, rows: number, cols: number): Ra
     // 6. Convert rasterized data into features
     const features = convertGridToFeatures(tileBiomeIds);
 
-    const output: RasterizationOutput = {
+    // 7. Convert biome grid into MapData tiles
+    const tiles: MapTile[][] = tileBiomeIds.map((row, r) =>
+        row.map((biomeId, c) => ({
+            x: c,
+            y: r,
+            biomeId,
+            discovered: false,
+            isPlayerCurrent: false,
+        }))
+    );
+
+    const mapData: MapData = {
+        gridSize: { rows, cols },
+        tiles,
+    };
+
+    const output: RasterizationResult = {
+        mapData,
         activeSeededFeatures: features,
         pathDetails: { mainPathCoords, pathAdjacencyCoords: new Set() },
-        tileBiomeIds,
     };
 
     console.log("Finished town rasterization (features created).");

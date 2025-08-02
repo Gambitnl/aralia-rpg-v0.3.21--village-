@@ -5,7 +5,8 @@
 import { MapData, MapTile, Location, Biome } from '../types';
 import { STARTING_LOCATION_ID } from '../constants';
 import { SeededRandom } from '../utils/seededRandom';
-import { generateTown, rasterize } from './townGeneratorService';
+import { generateTown } from './townGeneratorService';
+import { rasterizeTown } from './townRasterizer';
 
 /**
  * Generates a world map with biomes and links to predefined locations.
@@ -118,5 +119,6 @@ export function generateMap(
 
 export function generateTownMap(rows: number, cols: number, worldSeed: number): MapData {
     const townModel = generateTown(15, worldSeed);
-    return rasterize(townModel, rows, cols);
+    const { mapData } = rasterizeTown(townModel, rows, cols);
+    return mapData;
 }
