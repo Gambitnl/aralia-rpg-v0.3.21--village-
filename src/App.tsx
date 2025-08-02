@@ -395,8 +395,9 @@ const App: React.FC = () => {
             break;
         case 'generate_town':
             {
-                const newMapData = generateTownMap(50, 50, gameState.worldSeed);
-                dispatch({ type: 'SET_MAP_DATA', payload: newMapData });
+                // Town map now includes rasterized features and path details
+                const townMapData = generateTownMap(50, 50, gameState.worldSeed);
+                dispatch({ type: 'SET_MAP_DATA', payload: townMapData });
                 dispatch({ type: 'SET_GAME_PHASE', payload: GamePhase.VILLAGE_VIEW });
             }
             break;
