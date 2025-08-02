@@ -426,7 +426,8 @@ export type ActionType =
   | 'CAST_SPELL'
   | 'USE_LIMITED_ABILITY'
   | 'LONG_REST'
-  | 'SHORT_REST';
+  | 'SHORT_REST'
+  | 'ENTER_TOWN';
 
 
 export enum DiscoveryType {

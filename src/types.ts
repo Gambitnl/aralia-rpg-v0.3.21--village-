@@ -522,7 +522,8 @@ export type ActionType =
   | 'ADD_LOCATION_RESIDUE'
   | 'REMOVE_LOCATION_RESIDUE'
   | 'QUICK_TRAVEL'
-  | 'ENTER_VILLAGE';
+  | 'ENTER_VILLAGE'
+  | 'ENTER_TOWN';
   
 
 export enum DiscoveryType {
