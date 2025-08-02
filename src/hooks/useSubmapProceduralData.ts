@@ -9,6 +9,7 @@ import { LOCATIONS, STARTING_LOCATION_ID, BIOMES } from '../constants';
 import type { SeededFeatureConfig, PathDetails } from '../types';
 import { generateTown } from '../services/townGeneratorService';
 import { rasterizeTown } from '../services/townRasterizer';
+import { generateWfcGrid, transformGridToLayout, VillageLayout } from '../services/villageGenerationService';
 
 export type { SeededFeatureConfig, PathDetails };
 
@@ -24,6 +25,7 @@ interface UseSubmapProceduralDataOutput {
   simpleHash: (submapX: number, submapY: number, seedSuffix: string) => number;
   activeSeededFeatures: Array<{ x: number; y: number; config: SeededFeatureConfig; actualSize: number }>;
   pathDetails: PathDetails;
+  villageLayout?: VillageLayout;
 }
 
 export function useSubmapProceduralData({
@@ -37,9 +39,6 @@ export function useSubmapProceduralData({
   const biomeSeedText = worldBiome ? worldBiome.id + worldBiome.name : 'default_seed';
 
   const simpleHash = useCallback((submapX: number, submapY: number, seedSuffix: string): number => {
-    // This is a local reimplementation because the util itself is not exported,
-    // but the hook can still use the same logic. For a full refactor, this would
-    // be exported from the util.
     let h = 0;
     const str = `${worldSeed},${parentWorldMapCoords.x},${parentWorldMapCoords.y},${submapX},${submapY},${biomeSeedText},${seedSuffix}`;
     for (let i = 0; i < str.length; i++) {
@@ -48,10 +47,6 @@ export function useSubmapProceduralData({
     return Math.abs(h);
   }, [worldSeed, biomeSeedText, parentWorldMapCoords]);
 
-  // The complex logic is now inside getSubmapTileInfo, but the hook still needs
-  // to generate the data for the *entire* map for rendering, which is not what the util is for.
-  // The util is for single-tile lookups. So the original logic stays here, but the action handler
-  // will use the new util.
   const townData = useMemo(() => {
     if (currentWorldBiomeId === 'town') {
       const seed = simpleHash(0, 0, 'town_seed');
@@ -61,9 +56,21 @@ export function useSubmapProceduralData({
     return null;
   }, [currentWorldBiomeId, simpleHash, submapDimensions]);
 
+  const villageLayout = useMemo(() => {
+    if (currentWorldBiomeId === 'village') {
+      const seed = simpleHash(0, 0, 'village_seed').toString();
+      const grid = generateWfcGrid(seed, { type: 'farming', size: 'medium' });
+      return transformGridToLayout(grid);
+    }
+    return undefined;
+  }, [currentWorldBiomeId, simpleHash]);
+
   const activeSeededFeatures = useMemo(() => {
     if (currentWorldBiomeId === 'town') {
         return townData ? townData.activeSeededFeatures : [];
+    }
+    if (currentWorldBiomeId === 'village') {
+        return [];
     }
 
     const features: Array<{ x: number; y: number; config: SeededFeatureConfig; actualSize: number }> = [];
@@ -93,6 +100,9 @@ export function useSubmapProceduralData({
   const pathDetails = useMemo(() => {
     if (currentWorldBiomeId === 'town') {
         return townData ? townData.pathDetails : { mainPathCoords: new Set<string>(), pathAdjacencyCoords: new Set<string>() };
+    }
+    if (currentWorldBiomeId === 'village') {
+        return { mainPathCoords: new Set<string>(), pathAdjacencyCoords: new Set<string>() };
     }
 
     const mainPathCoords = new Set<string>();
@@ -173,5 +183,5 @@ export function useSubmapProceduralData({
     return { mainPathCoords, pathAdjacencyCoords };
   }, [submapDimensions, simpleHash, currentWorldBiomeId, parentWorldMapCoords]);
 
-  return { simpleHash, activeSeededFeatures, pathDetails };
+  return { simpleHash, activeSeededFeatures, pathDetails, villageLayout };
 }

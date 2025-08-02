@@ -22,6 +22,7 @@ import CompassPane from './CompassPane'; // Import CompassPane
 import { biomeVisualsConfig, defaultBiomeVisuals } from '../config/submapVisualsConfig';
 import { findPath } from '../utils/pathfinding'; // Import pathfinding utility
 import ActionPane from './ActionPane';
+import VillagePane from './VillagePane';
 
 
 interface SubmapPathNode {
@@ -423,7 +424,7 @@ const SubmapPane: React.FC<SubmapPaneProps> = ({
 
   const isOpen = true; 
 
-  const { simpleHash, activeSeededFeatures, pathDetails } = useSubmapProceduralData({
+  const { simpleHash, activeSeededFeatures, pathDetails, villageLayout } = useSubmapProceduralData({
     submapDimensions,
     currentWorldBiomeId,
     parentWorldMapCoords,
@@ -650,6 +651,11 @@ const SubmapPane: React.FC<SubmapPaneProps> = ({
     setIsQuickTravelMode(!isQuickTravelMode);
   };
 
+  const handleBuildingClick = (buildingId: string, buildingType: string) => {
+    if (disabled) return;
+    onAction({ type: 'ENTER_BUILDING', label: `Enter ${buildingType}`, payload: { buildingId, buildingType } });
+  };
+
   const glossaryItems: GlossaryDisplayItem[] = useMemo(() => {
     const items: GlossaryDisplayItem[] = [];
     const addedIcons = new Set<string>();
@@ -716,64 +722,68 @@ const SubmapPane: React.FC<SubmapPaneProps> = ({
             onMouseLeave={() => setHoveredTile(null)}
             onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
           >
-            <div
-                ref={gridContainerRef}
-                style={gridContainerStyle}
-                role="grid"
-                aria-labelledby="submap-grid-description"
-            >
-              <p id="submap-grid-description" className="sr-only">
-                Submap grid showing local terrain features. Your current position is marked with a person icon.
-              </p>
-              {submapGrid.map(({ r, c, visuals }) => {
-                const isPlayerPos = playerSubmapCoords?.x === c && playerSubmapCoords?.y === r;
-                if (isPlayerPos) {
-                   return (
-                    <div
-                      key={`${c},${r}`}
-                      className="w-full h-full flex items-center justify-center text-center text-sm relative transition-all duration-150 border border-black/10"
-                      style={{ ...visuals.style, zIndex: 100 }}
-                    >
-                      <span role="img" aria-label="Your Position" className="absolute inset-0 flex items-center justify-center text-lg text-yellow-300 filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                          🧍
-                      </span>
-                    </div>
-                  );
-                }
-                const tileKey = `${c},${r}`;
-                const isHighlightedForInspection = isInspecting && inspectableTiles.has(tileKey);
-                const isInteractiveResource = !isInspecting && !isQuickTravelMode && visuals.isResource && ((Math.abs(c-playerSubmapCoords.x) <=1 && Math.abs(r-playerSubmapCoords.y) <= 1));
-                const isInQuickTravelPath = isQuickTravelMode && quickTravelData.path.has(tileKey);
-                const isBlockedForTravel = pathfindingGrid.get(tileKey)?.blocksMovement === true;
+            {villageLayout ? (
+              <VillagePane layout={villageLayout} onBuildingClick={handleBuildingClick} />
+            ) : (
+              <div
+                  ref={gridContainerRef}
+                  style={gridContainerStyle}
+                  role="grid"
+                  aria-labelledby="submap-grid-description"
+              >
+                <p id="submap-grid-description" className="sr-only">
+                  Submap grid showing local terrain features. Your current position is marked with a person icon.
+                </p>
+                {submapGrid.map(({ r, c, visuals }) => {
+                  const isPlayerPos = playerSubmapCoords?.x === c && playerSubmapCoords?.y === r;
+                  if (isPlayerPos) {
+                     return (
+                      <div
+                        key={`${c},${r}`}
+                        className="w-full h-full flex items-center justify-center text-center text-sm relative transition-all duration-150 border border-black/10"
+                        style={{ ...visuals.style, zIndex: 100 }}
+                      >
+                        <span role="img" aria-label="Your Position" className="absolute inset-0 flex items-center justify-center text-lg text-yellow-300 filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                            🧍
+                        </span>
+                      </div>
+                    );
+                  }
+                  const tileKey = `${c},${r}`;
+                  const isHighlightedForInspection = isInspecting && inspectableTiles.has(tileKey);
+                  const isInteractiveResource = !isInspecting && !isQuickTravelMode && visuals.isResource && ((Math.abs(c-playerSubmapCoords.x) <=1 && Math.abs(r-playerSubmapCoords.y) <= 1));
+                  const isInQuickTravelPath = isQuickTravelMode && quickTravelData.path.has(tileKey);
+                  const isBlockedForTravel = pathfindingGrid.get(tileKey)?.blocksMovement === true;
 
-                return (
-                  <Tooltip key={tileKey} content={visuals.tooltipContent}>
-                    <div
-                      role="gridcell"
-                      aria-label={`Tile at ${c},${r}. ${typeof visuals.tooltipContent === 'string' ? visuals.tooltipContent : 'Visual detail.'}`}
-                      className={`w-full h-full flex items-center justify-center text-center text-sm relative transition-all duration-150
-                                  ${visuals.animationClass}
-                                  ${isInspecting && !isPlayerPos ? (inspectableTiles.has(tileKey) ? 'cursor-pointer ring-2 ring-yellow-400 ring-inset hover:bg-yellow-500/20' : 'opacity-60 cursor-not-allowed') : ''}
-                                  ${isInteractiveResource ? 'hover:ring-2 hover:ring-green-400 cursor-pointer' : ''}
-                                  ${isInQuickTravelPath ? 'bg-yellow-500/30' : ''}
-                                  ${isQuickTravelMode && !isBlockedForTravel ? 'cursor-pointer' : ''}
-                                  ${isQuickTravelMode && isBlockedForTravel ? 'cursor-not-allowed bg-red-800/30' : ''}
-                                  border border-black/10
-                                `}
-                      style={{ ...visuals.style, zIndex: visuals.zIndex, userSelect: 'none' }}
-                      onMouseEnter={() => isQuickTravelMode && setHoveredTile({ x: c, y: r })}
-                      onClick={() => handleTileClick(c, r, visuals.effectiveTerrainType, visuals.activeSeededFeatureConfigForTile)}
-                      tabIndex={isInspecting && inspectableTiles.has(tileKey) ? 0 : -1}
-                    >
-                      <span className="pointer-events-none" style={{ textShadow: '0 0 2px black, 0 0 2px black, 0 0 1px black' }}>{visuals.content}</span>
-                      {isHighlightedForInspection && (
-                          <div className="absolute inset-0 border-2 border-yellow-400 pointer-events-none animate-pulseInspectHighlight"></div>
-                      )}
-                    </div>
-                  </Tooltip>
-                );
-              })}
-            </div>
+                  return (
+                    <Tooltip key={tileKey} content={visuals.tooltipContent}>
+                      <div
+                        role="gridcell"
+                        aria-label={`Tile at ${c},${r}. ${typeof visuals.tooltipContent === 'string' ? visuals.tooltipContent : 'Visual detail.'}`}
+                        className={`w-full h-full flex items-center justify-center text-center text-sm relative transition-all duration-150
+                                    ${visuals.animationClass}
+                                    ${isInspecting && !isPlayerPos ? (inspectableTiles.has(tileKey) ? 'cursor-pointer ring-2 ring-yellow-400 ring-inset hover:bg-yellow-500/20' : 'opacity-60 cursor-not-allowed') : ''}
+                                    ${isInteractiveResource ? 'hover:ring-2 hover:ring-green-400 cursor-pointer' : ''}
+                                    ${isInQuickTravelPath ? 'bg-yellow-500/30' : ''}
+                                    ${isQuickTravelMode && !isBlockedForTravel ? 'cursor-pointer' : ''}
+                                    ${isQuickTravelMode && isBlockedForTravel ? 'cursor-not-allowed bg-red-800/30' : ''}
+                                    border border-black/10
+                                  `}
+                        style={{ ...visuals.style, zIndex: visuals.zIndex, userSelect: 'none' }}
+                        onMouseEnter={() => isQuickTravelMode && setHoveredTile({ x: c, y: r })}
+                        onClick={() => handleTileClick(c, r, visuals.effectiveTerrainType, visuals.activeSeededFeatureConfigForTile)}
+                        tabIndex={isInspecting && inspectableTiles.has(tileKey) ? 0 : -1}
+                      >
+                        <span className="pointer-events-none" style={{ textShadow: '0 0 2px black, 0 0 2px black, 0 0 1px black' }}>{visuals.content}</span>
+                        {isHighlightedForInspection && (
+                            <div className="absolute inset-0 border-2 border-yellow-400 pointer-events-none animate-pulseInspectHighlight"></div>
+                        )}
+                      </div>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            )}
             <div className={`day-night-overlay ${dayNightOverlayClass}`}></div>
           </div>
 
