@@ -1,5 +1,4 @@
 import { Model } from './town-generator/model';
-import { Patch } from './town-generator/patch';
 import { Point, Polygon } from './town-generator/geom';
 import { PathDetails, SeededFeatureConfig } from '../types';
 
@@ -30,8 +29,6 @@ function drawLine(grid: string[][], x1: number, y1: number, x2: number, y2: numb
 }
 
 export function rasterizeTownModel(model: Model, rows: number, cols: number): RasterizationOutput {
-    console.log("Starting town rasterization...");
-
     const tileBiomeIds: string[][] = Array(rows).fill(null).map(() => Array(cols).fill('grass'));
 
     // 1. Calculate scaling and offset
@@ -56,29 +53,71 @@ export function rasterizeTownModel(model: Model, rows: number, cols: number): Ra
         y: Math.floor((p.y - minY) * scale) + 2,
     });
 
-    // 2. Rasterize streets
+    // 2. Rasterize streets and roads
     const mainPathCoords = new Set<string>();
-    for (const street of model.arteries) {
+    const allStreets = [...model.arteries, ...model.streets];
+    for (const street of allStreets) {
         for (let i = 0; i < street.length - 1; i++) {
             const p1 = transform(street[i]);
-            const p2 = transform(street[i+1]);
+            const p2 = transform(street[i + 1]);
             drawLine(tileBiomeIds, p1.x, p1.y, p2.x, p2.y, 'street');
+        }
+    }
+    for (const road of model.roads) {
+        for (let i = 0; i < road.length - 1; i++) {
+            const p1 = transform(road[i]);
+            const p2 = transform(road[i + 1]);
+            drawLine(tileBiomeIds, p1.x, p1.y, p2.x, p2.y, 'road');
         }
     }
 
     // Populate pathDetails from the grid
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-            if (tileBiomeIds[r][c] === 'street') {
+            const id = tileBiomeIds[r][c];
+            if (id === 'street' || id === 'road') {
                 mainPathCoords.add(`${c},${r}`);
             }
         }
     }
 
-    // 3. Rasterize walls
+    // Determine tiles adjacent to paths
+    const pathAdjacencyCoords = new Set<string>();
+    mainPathCoords.forEach(coordStr => {
+        const [xStr, yStr] = coordStr.split(',');
+        const x = parseInt(xStr, 10);
+        const y = parseInt(yStr, 10);
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const adjX = x + dx;
+                const adjY = y + dy;
+                if (adjX >= 0 && adjX < cols && adjY >= 0 && adjY < rows) {
+                    const adjCoordStr = `${adjX},${adjY}`;
+                    if (!mainPathCoords.has(adjCoordStr)) {
+                        pathAdjacencyCoords.add(adjCoordStr);
+                    }
+                }
+            }
+        }
+    });
+
+    // 3. Rasterize walls, gates, and towers
     if (model.wall) {
         const wallPoly = model.wall.shape.map(transform);
         fillPolygon(tileBiomeIds, wallPoly, 'wall');
+        for (const gate of model.wall.gates) {
+            const g = transform(gate);
+            if (g.x >= 0 && g.x < cols && g.y >= 0 && g.y < rows) {
+                tileBiomeIds[g.y][g.x] = 'gate';
+            }
+        }
+        for (const tower of model.wall.towers) {
+            const t = transform(tower);
+            if (t.x >= 0 && t.x < cols && t.y >= 0 && t.y < rows) {
+                tileBiomeIds[t.y][t.x] = 'tower';
+            }
+        }
     }
 
     // 4. Rasterize buildings from wards
@@ -104,11 +143,9 @@ export function rasterizeTownModel(model: Model, rows: number, cols: number): Ra
 
     const output: RasterizationOutput = {
         activeSeededFeatures: features,
-        pathDetails: { mainPathCoords, pathAdjacencyCoords: new Set() },
+        pathDetails: { mainPathCoords, pathAdjacencyCoords },
         tileBiomeIds,
     };
-
-    console.log("Finished town rasterization (features created).");
     return output;
 }
 
@@ -155,10 +192,22 @@ function convertGridToFeatures(grid: string[][]): Array<{ x: number; y: number; 
     const features: Array<{ x: number; y: number; config: SeededFeatureConfig; actualSize: number }> = [];
 
     const biomeToFeatureConfig: Record<string, Partial<SeededFeatureConfig>> = {
-        'street': { name: 'Street', icon: '▫️', color: 'rgba(180, 180, 180, 0.5)' },
-        'plaza': { name: 'Plaza', icon: '▫️', color: 'rgba(200, 200, 200, 0.6)' },
-        'wall': { name: 'Wall', icon: '#', color: 'rgba(100, 100, 100, 0.8)', zOffset: 1 },
-        'default_building': { name: 'Building', icon: 'B', color: 'rgba(150, 120, 100, 0.8)', zOffset: 0.5 },
+        street: { name: 'Street', icon: '▫️', color: 'rgba(180, 180, 180, 0.5)' },
+        road: { name: 'Road', icon: '▫️', color: 'rgba(160, 160, 160, 0.5)' },
+        plaza: { name: 'Plaza', icon: '▫️', color: 'rgba(200, 200, 200, 0.6)' },
+        wall: { name: 'Wall', icon: '#', color: 'rgba(100, 100, 100, 0.8)', zOffset: 1 },
+        gate: { name: 'Gate', icon: '🚪', color: 'rgba(150, 150, 150, 0.9)', zOffset: 1 },
+        tower: { name: 'Tower', icon: '🗼', color: 'rgba(170, 170, 170, 0.9)', zOffset: 1 },
+        market_building: { name: 'Market', icon: '🛒', color: 'rgba(200, 150, 50, 0.8)', zOffset: 0.5 },
+        administration_building: { name: 'Town Hall', icon: '🏛️', color: 'rgba(190, 170, 120, 0.8)', zOffset: 0.5 },
+        merchant_building: { name: 'Shop', icon: '🏬', color: 'rgba(170, 130, 90, 0.8)', zOffset: 0.5 },
+        cathedral_building: { name: 'Cathedral', icon: '⛪', color: 'rgba(220, 220, 220, 0.8)', zOffset: 0.5 },
+        castle_building: { name: 'Castle', icon: '🏰', color: 'rgba(150, 150, 170, 0.8)', zOffset: 0.5 },
+        slum_building: { name: 'Shacks', icon: '🏚️', color: 'rgba(120, 100, 80, 0.8)', zOffset: 0.5 },
+        park_building: { name: 'Park', icon: '🌳', color: 'rgba(80, 180, 80, 0.7)', zOffset: 0.5 },
+        farm_building: { name: 'Farm', icon: '🚜', color: 'rgba(180, 160, 80, 0.8)', zOffset: 0.5 },
+        craftsmen_building: { name: 'Workshop', icon: '⚒️', color: 'rgba(160, 120, 80, 0.8)', zOffset: 0.5 },
+        default_building: { name: 'Building', icon: 'B', color: 'rgba(150, 120, 100, 0.8)', zOffset: 0.5 },
     };
 
     for (const component of components) {
@@ -171,10 +220,6 @@ function convertGridToFeatures(grid: string[][]): Array<{ x: number; y: number; 
         }), { x: Infinity, y: Infinity });
 
         let baseConfig = biomeToFeatureConfig[biomeId] || biomeToFeatureConfig['default_building'];
-        if (biomeId.endsWith('_building')) {
-            baseConfig = biomeToFeatureConfig['default_building'];
-            // Here you could add more specific colors based on the ward type in the biomeId
-        }
 
         const feature: { x: number; y: number; config: SeededFeatureConfig; actualSize: number } = {
             x: topLeft.x,
