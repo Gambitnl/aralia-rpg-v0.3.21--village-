@@ -36,7 +36,6 @@ import {
   USE_DUMMY_CHARACTER_FOR_DEV,
   BIOMES,
 } from './constants';
-import { generateTownMap } from './services/mapService';
 import { SUBMAP_DIMENSIONS } from './config/mapConfig';
 
 import WorldPane from './components/WorldPane';
@@ -394,14 +393,10 @@ const App: React.FC = () => {
             processAction({ type: 'TOGGLE_NPC_TEST_MODAL', label: 'Toggle NPC Test Plan' });
             break;
         case 'generate_town':
-            {
-                const newMapData = generateTownMap(50, 50, gameState.worldSeed);
-                dispatch({ type: 'SET_MAP_DATA', payload: newMapData });
-                dispatch({ type: 'SET_GAME_PHASE', payload: GamePhase.VILLAGE_VIEW });
-            }
+            processAction({ type: 'ENTER_TOWN', label: 'Generate Town' });
             break;
     }
-  }, [dispatch, handleNewGame, processAction, handleLoadGameFlow, handleBattleMapDemo, gameState.worldSeed]);
+  }, [dispatch, handleNewGame, processAction, handleLoadGameFlow, handleBattleMapDemo]);
 
   const handleModelChange = useCallback((model: string | null) => {
     dispatch({ type: 'SET_DEV_MODEL_OVERRIDE', payload: model });

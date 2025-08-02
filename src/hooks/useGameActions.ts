@@ -35,6 +35,7 @@ import {
 } from './actions/handleSystemAndUi';
 import { getDiegeticPlayerActionMessage } from '../utils/actionUtils';
 import { getSubmapTileInfo } from '../utils/submapUtils';
+import { generateTownMap } from '../services/mapService';
 
 
 interface UseGameActionsProps {
@@ -136,6 +137,13 @@ export function useGameActions({
             break;
           case 'QUICK_TRAVEL':
             await handleQuickTravel({ action, gameState, dispatch, addMessage });
+            break;
+          case 'ENTER_TOWN':
+            {
+              const newMapData = generateTownMap(50, 50, gameState.worldSeed);
+              dispatch({ type: 'SET_MAP_DATA', payload: newMapData });
+              dispatch({ type: 'SET_GAME_PHASE', payload: GamePhase.VILLAGE_VIEW });
+            }
             break;
           case 'ENTER_VILLAGE':
             dispatch({ type: 'SET_GAME_PHASE', payload: GamePhase.VILLAGE_VIEW });
