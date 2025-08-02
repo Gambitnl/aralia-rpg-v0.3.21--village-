@@ -7,9 +7,8 @@
 import { useMemo, useCallback } from 'react';
 import { LOCATIONS, STARTING_LOCATION_ID, BIOMES } from '../constants';
 import type { SeededFeatureConfig, PathDetails } from '../types';
-import * as SubmapUtils from '../utils/submapUtils';
 import { generateTown } from '../services/townGeneratorService';
-import { rasterizeTownModel } from '../services/townRasterizer';
+import { rasterizeTown } from '../services/townRasterizer';
 
 export type { SeededFeatureConfig, PathDetails };
 
@@ -57,7 +56,7 @@ export function useSubmapProceduralData({
     if (currentWorldBiomeId === 'town') {
       const seed = simpleHash(0, 0, 'town_seed');
       const model = generateTown(15, seed);
-      return rasterizeTownModel(model, submapDimensions.rows, submapDimensions.cols);
+      return rasterizeTown(model, submapDimensions.rows, submapDimensions.cols);
     }
     return null;
   }, [currentWorldBiomeId, simpleHash, submapDimensions]);
