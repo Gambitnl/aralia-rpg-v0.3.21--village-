@@ -8,6 +8,7 @@ import { SeededRandom } from '../utils/seededRandom';
 import { generateTown } from './townGeneratorService';
 import { rasterizeTownModel } from './townRasterizer';
 
+
 /**
  * Generates a world map with biomes and links to predefined locations.
  * @param {number} rows - Number of rows in the map grid.
