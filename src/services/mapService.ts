@@ -8,6 +8,7 @@ import { SeededRandom } from '../utils/seededRandom';
 import { generateTown } from './townGeneratorService';
 import { rasterizeTownModel } from './townRasterizer';
 
+
 /**
  * Generates a world map with biomes and links to predefined locations.
  * @param {number} rows - Number of rows in the map grid.
@@ -116,7 +117,6 @@ export function generateMap(
     tiles,
   };
 }
-
 export function generateTownMap(rows: number, cols: number, worldSeed: number): MapData {
     const townModel = generateTown(15, worldSeed);
     const rasterized = rasterizeTownModel(townModel, rows, cols);
@@ -126,11 +126,13 @@ export function generateTownMap(rows: number, cols: number, worldSeed: number): 
             x,
             y,
             biomeId,
-            discovered: true,
+            discovered: true, // Towns are fully discovered on generation
             isPlayerCurrent: false,
         }))
     );
 
+    // Note: This assumes the MapData type has been extended to include these properties
+    // for use in components like VillageScene.
     return {
         gridSize: { rows, cols },
         tiles,
