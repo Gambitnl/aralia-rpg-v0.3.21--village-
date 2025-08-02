@@ -6,7 +6,8 @@ import { MapData, MapTile, Location, Biome } from '../types';
 import { STARTING_LOCATION_ID } from '../constants';
 import { SeededRandom } from '../utils/seededRandom';
 import { generateTown } from './townGeneratorService';
-import { rasterizeTown } from './townRasterizer';
+import { rasterizeTownModel } from './townRasterizer';
+
 
 /**
  * Generates a world map with biomes and links to predefined locations.
@@ -116,9 +117,26 @@ export function generateMap(
     tiles,
   };
 }
-
 export function generateTownMap(rows: number, cols: number, worldSeed: number): MapData {
     const townModel = generateTown(15, worldSeed);
-    const { mapData } = rasterizeTown(townModel, rows, cols);
-    return mapData;
+    const rasterized = rasterizeTownModel(townModel, rows, cols);
+
+    const tiles: MapTile[][] = rasterized.tileBiomeIds.map((row, y) =>
+        row.map((biomeId, x) => ({
+            x,
+            y,
+            biomeId,
+            discovered: true, // Towns are fully discovered on generation
+            isPlayerCurrent: false,
+        }))
+    );
+
+    // Note: This assumes the MapData type has been extended to include these properties
+    // for use in components like VillageScene.
+    return {
+        gridSize: { rows, cols },
+        tiles,
+        activeSeededFeatures: rasterized.activeSeededFeatures,
+        pathDetails: rasterized.pathDetails,
+    };
 }
