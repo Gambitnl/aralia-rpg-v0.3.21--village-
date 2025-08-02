@@ -9,7 +9,15 @@ import { LOCATIONS, STARTING_LOCATION_ID, BIOMES } from '../constants';
 import { biomeVisualsConfig, defaultBiomeVisuals } from '../config/submapVisualsConfig';
 
 // --- Hashing ---
-const simpleHash = (worldSeed: number, worldX: number, worldY: number, biomeSeedText: string, submapX: number, submapY: number, seedSuffix: string): number => {
+export const simpleHash = (
+    worldSeed: number,
+    worldX: number,
+    worldY: number,
+    biomeSeedText: string,
+    submapX: number,
+    submapY: number,
+    seedSuffix: string
+): number => {
     let h = 0;
     const str = `${worldSeed},${worldX},${worldY},${submapX},${submapY},${biomeSeedText},${seedSuffix}`;
     for (let i = 0; i < str.length; i++) {
