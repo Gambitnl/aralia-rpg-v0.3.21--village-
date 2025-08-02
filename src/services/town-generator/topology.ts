@@ -1,7 +1,8 @@
 import { Point } from './geom';
 
+const EPSILON = 1e-6;
 function pointEquals(p1: Point, p2: Point): boolean {
-    return p1.x === p2.x && p1.y === p2.y;
+    return Math.abs(p1.x - p2.x) < EPSILON && Math.abs(p1.y - p2.y) < EPSILON;
 }
 import { Graph } from './graph';
 import { Model } from './model';
@@ -115,10 +116,18 @@ export class Topology {
 
     public buildPath(from: Point, to: Point, exclude: Node[] = []): Point[] | null {
         console.log(`buildPath called: From {x: ${from.x}, y: ${from.y}}, To {x: ${to.x}, y: ${to.y}}`);
-        const fromNode = this.findNodeByPoint(from);
-        const toNode = this.findNodeByPoint(to);
+        let fromNode = this.findNodeByPoint(from);
+        if (!fromNode) {
+            console.warn(`buildPath: fromNode not found for {x: ${from.x}, y: ${from.y}}. Attempting to register point.`);
+            fromNode = this.processPoint(from);
+        }
+        let toNode = this.findNodeByPoint(to);
+        if (!toNode) {
+            console.warn(`buildPath: toNode not found for {x: ${to.x}, y: ${to.y}}. Attempting to register point.`);
+            toNode = this.processPoint(to);
+        }
         if (!fromNode || !toNode) {
-            console.warn(`buildPath: fromNode or toNode is null. From: ${fromNode ? 'valid' : 'null'}, To: ${toNode ? 'valid' : 'null'}`);
+            console.warn(`buildPath: fromNode or toNode is still null after processing. From: ${fromNode ? 'valid' : 'null'}, To: ${toNode ? 'valid' : 'null'}`);
             return null;
         }
 

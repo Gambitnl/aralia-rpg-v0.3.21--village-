@@ -81,8 +81,8 @@ Therefore, the new stylesheet **must** be placed in `/public` (e.g., `public/sty
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Aralia RPG</title>
-            <!-- Tailwind CSS is loaded first to provide the base utility classes. -->
-            <script src="https://cdn.tailwindcss.com"></script>
+            <!-- Compiled Tailwind CSS is linked first to provide the base utility classes. -->
+            <link rel="stylesheet" href="/index.css">
             <!-- Font stylesheets are loaded next. -->
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -123,11 +123,11 @@ Therefore, the new stylesheet **must** be placed in `/public` (e.g., `public/sty
     -   **Code Suggestion (Example for `docs/PROJECT_OVERVIEW.README.md`)**:
         -   **Before**:
             ```markdown
-            *   **Styling**: **Tailwind CSS** for utility-first styling. All custom styles are in `<style>` blocks in `index.html`.
+            *   **Styling**: **Tailwind CSS** for utility-first styling, compiled with PostCSS via the `index.css` entry file.
             ```
         -   **After**:
             ```markdown
-            *   **Styling**: **Tailwind CSS** for utility-first styling. All custom styles are in a dedicated stylesheet located at `public/styles.css`, which is linked from `index.html`.
+            *   **Styling**: **Tailwind CSS** for utility-first styling. All custom styles are in a dedicated stylesheet located at `index.css`, which is linked from `index.html`.
             ```
 
 ### Phase 5: Final Verification
