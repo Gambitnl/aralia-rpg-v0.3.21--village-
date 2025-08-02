@@ -67,7 +67,7 @@ export async function loadGame(slotName: string = DEFAULT_SAVE_SLOT): Promise<Ga
     const loadedState: GameState = JSON.parse(serializedState);
 
     if (loadedState.mapData?.pathDetails) {
-      const { mainPathCoords, pathAdjacencyCoords } = loadedState.mapData.pathDetails as any;
+const { mainPathCoords, pathAdjacencyCoords } = loadedState.mapData.pathDetails as unknown as { mainPathCoords: string[]; pathAdjacencyCoords: string[] };
       loadedState.mapData.pathDetails = {
         mainPathCoords: new Set(mainPathCoords || []),
         pathAdjacencyCoords: new Set(pathAdjacencyCoords || []),
