@@ -8,7 +8,8 @@ import { useMemo, useCallback } from 'react';
 import { LOCATIONS, STARTING_LOCATION_ID, BIOMES } from '../constants';
 import type { SeededFeatureConfig, PathDetails } from '../types';
 import { generateTown } from '../services/townGeneratorService';
-import { rasterizeTown } from '../services/townRasterizer';
+import { rasterizeTownModel } from '../services/townRasterizer';
+import { simpleHash as baseSimpleHash } from '../utils/submapUtils';
 import { generateWfcGrid, transformGridToLayout, VillageLayout } from '../services/villageGenerationService';
 
 export type { SeededFeatureConfig, PathDetails };
@@ -38,20 +39,25 @@ export function useSubmapProceduralData({
   const worldBiome = BIOMES[currentWorldBiomeId];
   const biomeSeedText = worldBiome ? worldBiome.id + worldBiome.name : 'default_seed';
 
-  const simpleHash = useCallback((submapX: number, submapY: number, seedSuffix: string): number => {
-    let h = 0;
-    const str = `${worldSeed},${parentWorldMapCoords.x},${parentWorldMapCoords.y},${submapX},${submapY},${biomeSeedText},${seedSuffix}`;
-    for (let i = 0; i < str.length; i++) {
-      h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-    }
-    return Math.abs(h);
-  }, [worldSeed, biomeSeedText, parentWorldMapCoords]);
+  const simpleHash = useCallback(
+    (submapX: number, submapY: number, seedSuffix: string): number =>
+      baseSimpleHash(
+        worldSeed,
+        parentWorldMapCoords.x,
+        parentWorldMapCoords.y,
+        biomeSeedText,
+        submapX,
+        submapY,
+        seedSuffix
+      ),
+    [worldSeed, parentWorldMapCoords, biomeSeedText]
+  );
 
   const townData = useMemo(() => {
     if (currentWorldBiomeId === 'town') {
       const seed = simpleHash(0, 0, 'town_seed');
       const model = generateTown(15, seed);
-      return rasterizeTown(model, submapDimensions.rows, submapDimensions.cols);
+      return rasterizeTownModel(model, submapDimensions.rows, submapDimensions.cols);
     }
     return null;
   }, [currentWorldBiomeId, simpleHash, submapDimensions]);
